@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { validateBatch, validateEvent, validateIdentify, validateRegister, validateReplay } from '@ft-engage/contracts';
 
 const output = execFileSync('dart', ['run', 'tool/emit_samples.dart'], {
-  cwd: new URL('../packages/core/', import.meta.url),
+  cwd: new URL('../../core/', import.meta.url),
   encoding: 'utf8',
 });
 

@@ -11,3 +11,6 @@ pubspec.lock
 *.pem
 .flutter-plugins*
 .flutter-plugins-dependencies
+
+# Local maintainer tooling, never published
+tools/
