@@ -44,7 +44,7 @@ Future<FtEngage> start(
   publicKey: key,
   endpoint: Uri.parse('https://api.example.com'),
   transport: transport,
-  store: MemoryStore(),
+  storage: MemoryStore(),
   pushSource: push,
   requireConsent: consent,
   observeLifecycle: observe,
@@ -100,20 +100,25 @@ void main() {
     await tester.runAsync(
       () async => engage = await start(transport, observe: true),
     );
-    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
-    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
-    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
-    await tester.runAsync(
-      () => Future<void>.delayed(const Duration(milliseconds: 50)),
-    );
+    await tester.runAsync(() async {
+      final binding = tester.binding;
+      binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+      binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+    });
     expect(
       transport.events().map((e) => e['name']),
       containsAll(['app.opened', 'app.backgrounded']),
     );
-    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
-    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
-    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
-    await tester.runAsync(() async => engage.flush());
+    await tester.runAsync(() async {
+      final binding = tester.binding;
+      binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+      binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      await engage.flush();
+    });
     expect(
       transport.events().map((e) => e['name']),
       contains('app.foregrounded'),

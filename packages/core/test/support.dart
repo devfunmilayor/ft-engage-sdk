@@ -61,7 +61,7 @@ final epoch = DateTime.utc(2026, 11, 22, 12);
 Future<EngageClient> makeClient({
   ScriptedTransport? transport,
   FakeClock? clock,
-  KeyValueStore? store,
+  EngageStorage? store,
   bool requireConsent = false,
   int batchSize = 50,
 }) => EngageClient.create(
@@ -72,7 +72,7 @@ Future<EngageClient> makeClient({
     batchSize: batchSize,
   ),
   transport: transport ?? ScriptedTransport(),
-  store: store ?? MemoryStore(),
+  storage: store ?? MemoryStore(),
   clock: clock ?? FakeClock(epoch),
   ids: CountingIds(),
 );

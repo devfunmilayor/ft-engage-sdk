@@ -198,7 +198,7 @@ void main() {
       expect(client.userId, isNull);
       expect(client.installId, isNot(before));
       expect(await store.read('ft_engage.user_id'), isNull);
-      expect(await store.read('ft_engage.queue'), isNull);
+      expect(await store.length(), 0);
       expect(await store.read('ft_engage.install_id'), client.installId);
     },
   );
@@ -237,4 +237,19 @@ void main() {
     expect(event['at'], '2026-11-22T12:00:00.000Z');
     expect(jsonEncode(event), isNot(contains('null')));
   });
+
+  test(
+    'an unreadable stored event is discarded instead of blocking the queue',
+    () async {
+      final store = MemoryStore();
+      await store.append('not json');
+      final transport = ScriptedTransport();
+      final client = await makeClient(transport: transport, store: store);
+      await client.track('app.opened');
+      final result = await client.flush();
+      expect(result.sent, 1);
+      expect(client.pendingCount, 0);
+      expect(await store.length(), 0);
+    },
+  );
 }

@@ -6,12 +6,12 @@ Track installs, sessions and funnel steps from a Flutter app, and register the d
 |---|---|
 | `packages/contracts` | JSON Schemas for the wire format (events, batches, registration) |
 | `packages/core` | Pure Dart client: identity, offline queue, batching, retry, consent |
-| `packages/flutter` | Flutter plugin: storage, lifecycle events, device registration, push state |
+| `packages/flutter` | Flutter plugin: encrypted storage, lifecycle events, device registration, push state |
 | `example` | A small app that runs against a mock server in this repo |
 
 ## Status
 
-Version 0.1.0. Works today: identify, track, register, offline queue, retry, consent, `forget()`, lifecycle events.
+Version 0.2.0. Works today: identify, track, register, offline queue, retry, consent, `forget()`, lifecycle events, and encrypted on-device storage (Hive CE).
 Not built yet: native push token and permission reading (you supply a `PushSource`), Android install referrer, Apple Search Ads token, deep links. Nothing is published to pub.dev.
 
 ## Integrate in about ten minutes
@@ -25,7 +25,7 @@ dependencies:
     git:
       url: https://github.com/devfunmilayor/ft-engage-sdk.git
       path: packages/flutter
-      ref: v0.1.0
+      ref: v0.2.0
 ```
 
 3. Initialise once at startup:
