@@ -10,6 +10,8 @@ Every request carries the public key in an `Authorization` header and a JSON bod
 
 **Identity** (`/v1/identify`): only when you call `identify`. It carries the install id, the user id, and whatever email, phone, traits and marketing consent you pass. Until it is delivered, the email and phone sit in the on-device storage, which the Flutter plugin encrypts. After delivery they are removed from the device.
 
+**Behaviour insights** (only if you turn them on, see `docs/insights.md`): screen names, tap positions as fractions of the screen, whether a tap looked dead, scroll depth and a random session id, sent as ordinary events. Never text or field contents.
+
 ## What it does not do
 
 - No advertising id, no device fingerprinting, no contacts, no location, no clipboard.

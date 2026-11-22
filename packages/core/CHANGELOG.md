@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.0
+
+- `InsightsRecorder` and `InsightsConfig`: turn screen views, taps, rage taps, scroll depth and a session id into events (`screen.viewed`, `ui.tap`, `ui.rage_tap`, `ui.scroll_depth`). Positions are fractions of the screen, never text. Pure Dart so it can be tested without a device.
+
 ## 0.4.0
 
 - `identify` accepts `userHash`, the HMAC your server makes for the user id, for projects that require signed identity. It is validated, kept when calls merge, and dropped when a different user identifies.
