@@ -67,7 +67,7 @@ class EngageClient {
   static const _maxBackoff = Duration(minutes: 5);
 
   final EngageConfig config;
-  final KeyValueStore _store;
+  final EngageStorage _store;
   final Transport _transport;
   final Clock _clock;
   final IdGenerator _ids;
@@ -85,11 +85,11 @@ class EngageClient {
   static Future<EngageClient> create({
     required EngageConfig config,
     required Transport transport,
-    KeyValueStore? store,
+    EngageStorage? storage,
     Clock clock = const SystemClock(),
     IdGenerator? ids,
   }) async {
-    final kv = store ?? MemoryStore();
+    final kv = storage ?? MemoryStore();
     final generator = ids ?? RandomIdGenerator();
     var installId = await kv.read(_installKey);
     if (installId == null) {
@@ -285,9 +285,17 @@ class EngageClient {
     }
     var sent = 0;
     var dropped = 0;
-    final minimum = fullBatchesOnly ? config.batchSize : 1;
-    while (_queue.length >= minimum) {
-      final batch = _queue.head(config.batchSize);
+    while (true) {
+      final taken = await _queue.head(config.batchSize);
+      if (taken.rawCount == 0 ||
+          (fullBatchesOnly && taken.rawCount < config.batchSize)) {
+        break;
+      }
+      final batch = taken.events;
+      if (batch.isEmpty) {
+        await _queue.removeFirst(taken.rawCount);
+        continue;
+      }
       try {
         final response = await _transport.post(
           _url('/v1/events'),
@@ -306,7 +314,7 @@ class EngageClient {
           _fail();
           return _result(sent, dropped, status);
         }
-        await _queue.removeFirst(batch.length);
+        await _queue.removeFirst(taken.rawCount);
         _failures = 0;
         _retryAt = null;
       } on TransportException {

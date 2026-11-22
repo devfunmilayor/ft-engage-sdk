@@ -9,3 +9,5 @@ pubspec.lock
 .env.*
 *.p8
 *.pem
+.flutter-plugins*
+.flutter-plugins-dependencies

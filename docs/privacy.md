@@ -26,4 +26,8 @@ With `requireConsent: true` nothing is collected until `setConsent(ConsentState.
 
 ## Local storage
 
-State is stored with shared preferences under keys starting `ft_engage.`: install id, user id, consent, queue, and a pending registration.
+The Flutter plugin stores state on the device with Hive CE, in two boxes: `ft_engage_state` (install id, user id, consent, pending registration) and `ft_engage_queue` (events waiting to be sent).
+
+Both boxes are encrypted with AES-256 by default. The encryption key is random, created on first run, and kept in the platform keychain (iOS) or keystore (Android) through `flutter_secure_storage`. If the key is lost, for example after restoring a device backup, the SDK starts with empty boxes instead of failing.
+
+Pass `storage:` to `FtEngage.init` to use your own storage, or call `HiveStorage.open(encrypt: false)` to turn encryption off. Storage is removed when the app is uninstalled.
