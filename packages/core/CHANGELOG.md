@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.0
+
+- `ReplayBuffer` and `ReplayConfig`: record a session as wireframe snapshots plus taps, scrolls and app state marks, cut into chunks and sent with `EngageClient.postReplay`. Chunks that cannot be delivered are kept (the newest 20) and retried, and a server that has replay turned off stops the recording.
+- `InsightsRecorder` takes an optional `InsightsListener` to follow sessions, screens, taps and scrolling.
+
 ## 0.6.0
 
 - Screen names are cleaned by default: ids, UUIDs and long tokens in a route become `:id` and query strings are dropped, so `/order/8841?tab=2` is the screen `/order/:id`. Turn it off with `normalizeScreens: false` or supply your own `screenName`.

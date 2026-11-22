@@ -12,6 +12,8 @@ Every request carries the public key in an `Authorization` header and a JSON bod
 
 **Behaviour insights** (only if you turn them on, see `docs/insights.md`): screen names, tap positions as fractions of the screen, whether a tap looked dead, scroll depth and a random session id, sent as ordinary events. Never text or field contents.
 
+**Session replay** (only if you turn it on, see `docs/replay.md`): screen names and a wireframe of each screen as rectangles with a kind and a colour, with tap positions, scroll positions and app state marks. Never text, field contents or pixels.
+
 ## What it does not do
 
 - No advertising id, no device fingerprinting, no contacts, no location, no clipboard.

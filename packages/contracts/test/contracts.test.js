@@ -6,6 +6,7 @@ import {
   validateRegister,
   validateBatch,
   validateIdentify,
+  validateReplay,
   MAX_BATCH_SIZE,
 } from '../index.js';
 
@@ -21,6 +22,7 @@ const validatorFor = (file) => {
   if (file.startsWith('event_')) return validateEvent;
   if (file.startsWith('register_')) return validateRegister;
   if (file.startsWith('identify_')) return validateIdentify;
+  if (file.startsWith('replay_')) return validateReplay;
   return validateBatch;
 };
 

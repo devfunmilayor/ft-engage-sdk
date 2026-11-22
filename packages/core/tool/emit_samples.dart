@@ -80,6 +80,37 @@ Future<void> main() async {
   insights.leaveScreen();
   await Future<void>.delayed(Duration.zero);
   await client.flush(force: true);
+  final replay = ReplayBuffer(
+    config: const ReplayConfig(),
+    installId: () => client.installId,
+    platform: 'android',
+    send: (chunk) async {
+      print(jsonEncode({'kind': 'replay', 'payload': chunk}));
+      return ReplayDelivery.sent;
+    },
+  );
+  replay.session('s0a1b2c3d');
+  replay.screen('/home');
+  replay.snapshot(
+    width: 390,
+    height: 844,
+    scrollOffset: 0,
+    nodes: [
+      ['x', 0, 0, 390, 844, 4294967295],
+      ['t', 20, 60, 200, 24],
+      ['i', 20, 100, 350, 180],
+      ['b', 20, 300, 350, 48, 4278190335],
+      ['f', 20, 360, 350, 48],
+      ['m', 20, 420, 350, 100],
+    ],
+  );
+  replay.tap(195, 320);
+  replay.tap(195, 320, dead: true, rage: true);
+  replay.scroll(640, contentHeight: 3200);
+  replay.mark('focus');
+  replay.mark('bg');
+  replay.mark('fg');
+  await replay.flush(end: true);
   for (final (path, body) in capture.posts) {
     final kind = switch (path) {
       '/v1/register' => 'register',
