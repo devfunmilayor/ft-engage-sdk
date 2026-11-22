@@ -1,19 +1,39 @@
+import 'dart:async';
+
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:ft_engage_core/ft_engage_core.dart';
 
 import '../ft_engage.dart';
 import 'engage_marker.dart';
+import 'response_watch.dart';
 
 const _tapSlop = 18.0;
 const _tapTime = Duration(milliseconds: 500);
 
 class _Touch {
-  _Touch(this.start, this.at);
+  _Touch(this.start, this.at, this.baseline);
 
   final Offset start;
   final DateTime at;
+  final _Baseline baseline;
   bool moved = false;
+}
+
+class _Baseline {
+  const _Baseline({
+    required this.routes,
+    required this.scrolls,
+    required this.focus,
+    required this.frames,
+    required this.ambient,
+  });
+
+  final int routes;
+  final int scrolls;
+  final FocusNode? focus;
+  final int frames;
+  final bool ambient;
 }
 
 class TapReading {
@@ -56,10 +76,16 @@ TapReading readTap(HitTestResult result) {
 }
 
 class EngageInsights extends StatefulWidget {
-  const EngageInsights({super.key, required this.engage, required this.child});
+  const EngageInsights({
+    super.key,
+    required this.engage,
+    required this.child,
+    this.responseWindow = const Duration(milliseconds: 400),
+  });
 
   final FtEngage engage;
   final Widget child;
+  final Duration responseWindow;
 
   @override
   State<EngageInsights> createState() => _EngageInsightsState();
@@ -67,7 +93,25 @@ class EngageInsights extends StatefulWidget {
 
 class _EngageInsightsState extends State<EngageInsights> {
   final Map<int, _Touch> _touches = {};
+  final ResponseWatch _watch = ResponseWatch();
+  final Set<Timer> _pending = {};
   bool _multi = false;
+  int _scrollEpoch = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.engage.insights != null) _watch.install();
+  }
+
+  @override
+  void dispose() {
+    for (final timer in _pending) {
+      timer.cancel();
+    }
+    _watch.uninstall();
+    super.dispose();
+  }
 
   InsightsRecorder? get _recorder => widget.engage.insights;
 
@@ -75,7 +119,17 @@ class _EngageInsightsState extends State<EngageInsights> {
     if (_touches.isNotEmpty) {
       _multi = true;
     }
-    _touches[event.pointer] = _Touch(event.position, DateTime.now());
+    _touches[event.pointer] = _Touch(
+      event.position,
+      DateTime.now(),
+      _Baseline(
+        routes: widget.engage.navigationEpoch,
+        scrolls: _scrollEpoch,
+        focus: FocusManager.instance.primaryFocus,
+        frames: _watch.frames,
+        ambient: _watch.ambient(),
+      ),
+    );
   }
 
   void _move(PointerMoveEvent event) {
@@ -102,16 +156,38 @@ class _EngageInsightsState extends State<EngageInsights> {
     );
     final reading = readTap(result);
     if (reading.sensitive) return;
-    recorder.tap(
-      TapSample(
-        x: event.position.dx,
-        y: event.position.dy,
-        viewportWidth: size.width,
-        viewportHeight: size.height,
-        dead: reading.dead,
-        target: reading.target,
-      ),
+    TapSample sample(bool dead) => TapSample(
+      x: event.position.dx,
+      y: event.position.dy,
+      viewportWidth: size.width,
+      viewportHeight: size.height,
+      dead: dead,
+      target: reading.target,
     );
+    if (!reading.dead) {
+      recorder.tap(sample(false));
+      return;
+    }
+    _confirmDead(recorder, sample, touch.baseline);
+  }
+
+  void _confirmDead(
+    InsightsRecorder recorder,
+    TapSample Function(bool) sample,
+    _Baseline before,
+  ) {
+    final engage = widget.engage;
+    late final Timer timer;
+    timer = Timer(widget.responseWindow, () {
+      _pending.remove(timer);
+      final responded =
+          engage.navigationEpoch != before.routes ||
+          _scrollEpoch != before.scrolls ||
+          !identical(FocusManager.instance.primaryFocus, before.focus) ||
+          (!before.ambient && _watch.changedSince(before.frames));
+      recorder.tap(sample(!responded));
+    });
+    _pending.add(timer);
   }
 
   void _cancel(PointerCancelEvent event) {
@@ -119,15 +195,27 @@ class _EngageInsightsState extends State<EngageInsights> {
     if (_touches.isEmpty) _multi = false;
   }
 
-  bool _scrolled(ScrollNotification notification) {
-    final metrics = notification.metrics;
-    if (notification.depth == 0 &&
-        metrics.axis == Axis.vertical &&
-        metrics.maxScrollExtent > 0) {
-      final fraction =
-          (metrics.pixels + metrics.viewportDimension) /
-          (metrics.maxScrollExtent + metrics.viewportDimension);
-      _recorder?.scroll(fraction);
+  bool _scrolled(Notification notification) {
+    if (notification is ScrollUpdateNotification) _scrollEpoch += 1;
+    final ScrollMetrics? metrics = switch (notification) {
+      ScrollNotification() when notification.depth == 0 => notification.metrics,
+      ScrollMetricsNotification() => notification.metrics,
+      _ => null,
+    };
+    if (metrics == null ||
+        metrics.axis != Axis.vertical ||
+        metrics.maxScrollExtent <= 0) {
+      return false;
+    }
+    final content = metrics.maxScrollExtent + metrics.viewportDimension;
+    if (notification is ScrollNotification) {
+      _recorder?.scroll(
+        (metrics.pixels + metrics.viewportDimension) / content,
+        offset: metrics.pixels,
+        contentHeight: content,
+      );
+    } else {
+      _recorder?.metrics(offset: metrics.pixels, contentHeight: content);
     }
     return false;
   }
@@ -141,7 +229,7 @@ class _EngageInsightsState extends State<EngageInsights> {
       onPointerMove: _move,
       onPointerUp: _up,
       onPointerCancel: _cancel,
-      child: NotificationListener<ScrollNotification>(
+      child: NotificationListener<Notification>(
         onNotification: _scrolled,
         child: widget.child,
       ),

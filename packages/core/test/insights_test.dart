@@ -6,22 +6,27 @@ import 'package:test/test.dart';
 import 'support.dart';
 
 class Logged {
-  Logged(this.name, this.props, this.screen);
+  Logged(this.name, this.props, this.screen, this.at);
 
   final String name;
   final Map<String, Object?> props;
   final String? screen;
+  final DateTime? at;
 }
 
 class Rig {
-  Rig({InsightsConfig config = const InsightsConfig(), int seed = 1})
-    : clock = FakeClock(epoch) {
+  Rig({
+    InsightsConfig config = const InsightsConfig(),
+    int seed = 1,
+    EngageStorage? storage,
+  }) : clock = FakeClock(epoch) {
     recorder = InsightsRecorder(
       config: config,
       clock: clock,
       random: Random(seed),
-      track: (name, {props = const {}, screen}) async {
-        events.add(Logged(name, props, screen));
+      storage: storage,
+      track: (name, {props = const {}, screen, at}) async {
+        events.add(Logged(name, props, screen, at));
       },
     );
   }
@@ -237,7 +242,7 @@ void main() {
   test('a failing track never breaks the app', () async {
     final recorder = InsightsRecorder(
       config: const InsightsConfig(),
-      track: (name, {props = const {}, screen}) async =>
+      track: (name, {props = const {}, screen, at}) async =>
           throw StateError('boom'),
     );
     recorder.screenViewed('home');
@@ -246,4 +251,139 @@ void main() {
     );
     await Future<void>.delayed(Duration.zero);
   });
+
+  test('ids and query strings in screen names collapse into one screen', () {
+    expect(normalizeScreenName('/order/8841'), '/order/:id');
+    expect(normalizeScreenName('/order/8841/'), '/order/:id');
+    expect(
+      normalizeScreenName(
+        '/user/3f2b8c1e-7a44-4b0e-9d52-1c0f5a6b7d88/settings',
+      ),
+      '/user/:id/settings',
+    );
+    expect(normalizeScreenName('/doc/5f1d7f3a9b2c4d6e8a0b1c2d'), '/doc/:id');
+    expect(normalizeScreenName('/share/Ab3dE5gH7jK9mN1pQ'), '/share/:id');
+    expect(normalizeScreenName('/search?q=shoes&page=2'), '/search');
+    expect(normalizeScreenName('/profile#bio'), '/profile');
+    expect(normalizeScreenName('/'), '/');
+    expect(normalizeScreenName('Checkout'), 'Checkout');
+    expect(normalizeScreenName('/settings/privacy'), '/settings/privacy');
+    expect(normalizeScreenName('/onboarding/step-2'), '/onboarding/step-2');
+    expect(
+      normalizeScreenName('/a/averyveryverylongwordwithnodigits'),
+      '/a/averyveryverylongwordwithnodigits',
+    );
+  });
+
+  test(
+    'screens that differ only by an id are one screen, and the setting can be changed',
+    () {
+      final rig = Rig();
+      rig.recorder.screenViewed('/order/1');
+      rig.recorder.screenViewed('/order/2');
+      rig.recorder.screenViewed('/order/3');
+      rig.recorder.screenViewed('/help');
+      final views = rig.named('screen.viewed');
+      expect(views.map((v) => v.screen).toList(), ['/order/:id', '/help']);
+      expect(views[1].props['from'], '/order/:id');
+
+      final raw = Rig(config: const InsightsConfig(normalizeScreens: false));
+      raw.recorder.screenViewed('/order/1');
+      raw.recorder.screenViewed('/order/2');
+      expect(raw.named('screen.viewed'), hasLength(2));
+
+      final custom = Rig(
+        config: InsightsConfig(screenName: (n) => n.toUpperCase()),
+      );
+      custom.recorder.screenViewed('/a/1');
+      expect(custom.named('screen.viewed').single.screen, '/A/1');
+    },
+  );
+
+  test(
+    'taps on a scrolling screen say how far down the page the person was',
+    () {
+      final rig = Rig();
+      rig.recorder.screenViewed('home');
+      rig.tapAt(10, 10);
+      expect(rig.named('ui.tap').last.props.containsKey('ch'), false);
+      rig.recorder.metrics(offset: 0, contentHeight: 3200);
+      rig.tapAt(10, 10);
+      rig.recorder.scroll(0.5, offset: 1200.4, contentHeight: 3200);
+      rig.tapAt(10, 10);
+      final taps = rig.named('ui.tap');
+      expect(taps[1].props['so'], 0);
+      expect(taps[1].props['ch'], 3200);
+      expect(taps[2].props['so'], 1200);
+      rig.recorder.screenViewed('about');
+      rig.tapAt(10, 10);
+      expect(rig.named('ui.tap').last.props.containsKey('ch'), false);
+      rig.recorder.metrics(offset: 0, contentHeight: double.nan);
+      rig.recorder.metrics(offset: 0, contentHeight: -4);
+      rig.tapAt(10, 10);
+      expect(rig.named('ui.tap').last.props.containsKey('ch'), false);
+    },
+  );
+
+  test(
+    'scroll depth survives the app being killed and is sent at its original time on the next start',
+    () async {
+      final storage = MemoryStore();
+      final first = Rig(storage: storage);
+      first.recorder.screenViewed('home');
+      first.recorder.scroll(0.05);
+      first.recorder.scroll(0.35);
+      first.recorder.scroll(0.38);
+      first.recorder.scroll(0.62);
+      await Future<void>.delayed(Duration.zero);
+      expect(
+        await storage.read('ft_engage.insights.pending'),
+        contains('"depth":62'),
+      );
+      expect(first.named('ui.scroll_depth'), isEmpty);
+
+      final second = Rig(storage: storage);
+      await second.recorder.recover();
+      await Future<void>.delayed(Duration.zero);
+      final recovered = second.named('ui.scroll_depth');
+      expect(recovered, hasLength(1));
+      expect(recovered.single.screen, 'home');
+      expect(recovered.single.props['depth'], 62);
+      expect(recovered.single.props['recovered'], true);
+      expect(recovered.single.at, epoch);
+      expect(await storage.read('ft_engage.insights.pending'), isNull);
+      await second.recorder.recover();
+      await Future<void>.delayed(Duration.zero);
+      expect(second.named('ui.scroll_depth'), hasLength(1));
+    },
+  );
+
+  test(
+    'a clean exit from the screen leaves nothing to recover and bad leftovers are ignored',
+    () async {
+      final storage = MemoryStore();
+      final rig = Rig(storage: storage);
+      rig.recorder.screenViewed('home');
+      rig.recorder.scroll(0.5);
+      await Future<void>.delayed(Duration.zero);
+      rig.recorder.screenViewed('signup');
+      await Future<void>.delayed(Duration.zero);
+      expect(await storage.read('ft_engage.insights.pending'), isNull);
+      expect(rig.named('ui.scroll_depth'), hasLength(1));
+
+      for (final junk in [
+        'not json',
+        '{"screen":1}',
+        '{"screen":"a","depth":500,"at":"2026-01-01T00:00:00Z"}',
+        '{"screen":"a","depth":5,"at":"nope"}',
+      ]) {
+        await storage.write('ft_engage.insights.pending', junk);
+        final fresh = Rig(storage: storage);
+        await fresh.recorder.recover();
+        await Future<void>.delayed(Duration.zero);
+        expect(fresh.events, isEmpty, reason: junk);
+        expect(await storage.read('ft_engage.insights.pending'), isNull);
+      }
+    },
+  );
 }
