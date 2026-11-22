@@ -5,4 +5,5 @@ environment:
 workspace:
   - packages/core
   - packages/flutter
+  - packages/firebase
   - example

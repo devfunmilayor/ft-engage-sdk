@@ -30,6 +30,7 @@ class FtEngage with WidgetsBindingObserver {
   final String? _platform;
   final String? _appVersion;
   PushState? _lastPush;
+  StreamSubscription<void>? _pushChanges;
   bool _observing = false;
 
   static Future<FtEngage> init({
@@ -89,6 +90,12 @@ class FtEngage with WidgetsBindingObserver {
     );
     await instance.insights?.recover();
     if (observeLifecycle) instance._startObserving();
+    if (pushSource is PushChanges) {
+      instance._pushChanges = (pushSource as PushChanges).changes.listen(
+        (_) => unawaited(instance._syncRegistration()),
+        onError: (Object _) {},
+      );
+    }
     await instance._syncRegistration();
     await client.track('app.opened');
     return instance;
@@ -141,6 +148,14 @@ class FtEngage with WidgetsBindingObserver {
     if (state == ConsentState.granted) await _syncRegistration(force: true);
   }
 
+  Future<PushState> requestPushPermission() async {
+    final Object? source = _pushSource;
+    if (source is! PushPermission) return _lastPush ?? PushState.unknown;
+    final state = await source.request();
+    await _syncRegistration(force: true);
+    return state;
+  }
+
   Future<FlushResult> flush() => client.flush(force: true);
 
   Future<void> forget() async {
@@ -152,6 +167,8 @@ class FtEngage with WidgetsBindingObserver {
   void dispose() {
     if (_observing) WidgetsBinding.instance.removeObserver(this);
     _observing = false;
+    unawaited(_pushChanges?.cancel());
+    _pushChanges = null;
     replay?.dispose();
     client.close();
   }

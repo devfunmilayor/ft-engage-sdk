@@ -1,6 +1,6 @@
 name: ft_engage_flutter
 description: Flutter plugin for the FT.Engage SDK with lifecycle events, device registration, push state and encrypted on-device storage.
-version: 0.7.0
+version: 0.8.0
 repository: https://github.com/devfunmilayor/ft-engage-sdk/tree/main/packages/flutter
 resolution: workspace
 environment:
