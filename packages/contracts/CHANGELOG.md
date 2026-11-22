@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0
+
+- `identify` accepts an optional `userHash`, a lowercase hex HMAC-SHA256 of the user id made by your server.
+
 ## 0.2.0
 
 - Added the `identify` schema: user id, email, phone, flat traits and per-channel marketing consent.

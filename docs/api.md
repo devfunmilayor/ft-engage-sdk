@@ -5,7 +5,7 @@
 | Member | Purpose |
 |---|---|
 | `FtEngage.init({publicKey, endpoint, requireConsent, appVersion, pushSource, transport, storage, flushInterval, observeLifecycle})` | Create the client. `publicKey` and `endpoint` are required, and there is no default endpoint. |
-| `identify(userId, {email, phone, traits, marketingConsent})` | Link this install to a person and tag later events with the user id. Sends `/v1/identify` after registration. Throws `InvalidIdentityException` for a bad value. See below. |
+| `identify(userId, {userHash, email, phone, traits, marketingConsent})` | Link this install to a person and tag later events with the user id. Sends `/v1/identify` after registration. Throws `InvalidIdentityException` for a bad value. See below. |
 | `logout()` | Stop tagging events with the user id and drop any identity still waiting to be sent. Keeps the install id and consent. |
 | `track(name, {props, screen})` | Queue an event. Throws `InvalidEventException` for a bad name or property. |
 | `setConsent(state)` | `granted`, `denied` or `unknown`. |
@@ -22,6 +22,7 @@ Same methods, plus `register(RegisterInfo)`, `installId`, `userId`, `consent`, `
 
 ## Identity
 
+- `userHash`: proof from your own server that this app session really belongs to `userId`. See "Signed identity" below.
 - `userId`: 1 to 128 characters from letters, digits and `_ . : @ + -`.
 - `email` must look like an address. `phone` must be international format such as `+2348012345678`.
 - `traits` are flat: text up to 200 characters, numbers, booleans or `null` (which removes the trait). Names are lowercase snake_case, at most 30 per call. Names that look like money or secrets (`password`, `token`, `card`, `balance`, `amount` and similar) are rejected.
@@ -30,6 +31,23 @@ Same methods, plus `register(RegisterInfo)`, `installId`, `userId`, `consent`, `
 - With `requireConsent: true` and no `granted` consent, `identify` sends and stores nothing but the user id. Call it again after consent.
 - Delivery follows the same rules as events: registration first, then identity, then events. 400 drops the request. 404 (the server has not seen the install yet), 429, 5xx and network errors keep it and retry with backoff.
 - `logout()` does not unlink the install on the server. Until another person identifies on the same install, the server still associates the device with the previous person.
+
+## Signed identity
+
+The public key is inside every copy of your app, so on its own it cannot prove who someone is. When a project requires signed identity, FT.Engage rejects an identify call whose `userHash` is missing or wrong (`401 identity_unverified`). The SDK treats that as a rejected request and drops it, so a wrong hash never retries.
+
+1. In the console, open People, then Identity security, and copy your project's identity secret. Keep it on your server only. Never put it in the app.
+2. When someone signs in, your server computes `HMAC-SHA256(secret, userId)` as lowercase hex and returns it to the app together with the sign-in result.
+3. The app passes it along: `engage.identify(userId, userHash: hashFromServer)`.
+
+```js
+import { createHmac } from 'node:crypto';
+const userHash = createHmac('sha256', process.env.ENGAGE_IDENTITY_SECRET).update(userId).digest('hex');
+```
+
+The hash covers the user id only, so keep it as private as a session token, send it over TLS only, and generate it only after your own sign-in succeeded. Rotating the secret in the console invalidates every hash at once.
+
+Calls made with a secret key from your server need no hash.
 
 ## Delivery
 

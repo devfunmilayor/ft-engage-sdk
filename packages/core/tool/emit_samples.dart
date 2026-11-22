@@ -47,6 +47,8 @@ Future<void> main() async {
   );
   await client.identify(
     'user_2',
+    userHash:
+        '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
     email: 'ada@example.com',
     phone: '+2348012345678',
     traits: {'plan': 'free', 'age': 31, 'verified': false, 'nickname': null},
