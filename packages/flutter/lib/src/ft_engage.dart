@@ -17,6 +17,7 @@ class FtEngage with WidgetsBindingObserver {
 
   final EngageClient client;
   final InsightsRecorder? insights;
+  int navigationEpoch = 0;
   late final NavigatorObserver navigatorObserver = EngageNavigatorObserver(
     this,
   );
@@ -40,6 +41,7 @@ class FtEngage with WidgetsBindingObserver {
     InsightsConfig? insights,
   }) async {
     WidgetsFlutterBinding.ensureInitialized();
+    final store = storage ?? await HiveStorage.open();
     final client = await EngageClient.create(
       config: EngageConfig(
         publicKey: publicKey,
@@ -49,7 +51,7 @@ class FtEngage with WidgetsBindingObserver {
         appVersion: appVersion,
       ),
       transport: transport ?? HttpTransport(),
-      storage: storage ?? await HiveStorage.open(),
+      storage: store,
     );
     final instance = FtEngage._(
       client,
@@ -58,8 +60,13 @@ class FtEngage with WidgetsBindingObserver {
       appVersion,
       insights == null
           ? null
-          : InsightsRecorder(config: insights, track: client.track),
+          : InsightsRecorder(
+              config: insights,
+              track: client.track,
+              storage: store,
+            ),
     );
+    await instance.insights?.recover();
     if (observeLifecycle) instance._startObserving();
     await instance._syncRegistration();
     await client.track('app.opened');

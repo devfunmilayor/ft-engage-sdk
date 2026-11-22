@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.6.0
+
+- Dead taps are confirmed before they are reported: after a tap that looks dead the plugin waits 400 ms and drops the flag if the app navigated, scrolled, moved focus or drew a new frame, unless the screen was already animating continuously. Requires `ft_engage_core` 0.6.0.
+- Scroll metrics are read as soon as a page lays out, so even taps before the first scroll know the page height.
+
 ## 0.5.0
 
 - Opt-in behaviour insights: pass `insights: InsightsConfig()` to `FtEngage.init`, wrap the app in `EngageInsights`, and add `engage.navigatorObserver` to your navigator. Captures taps (with dead taps), rage taps, screens and scroll depth. `EngageTarget` names a part of the screen and `EngageSensitive` excludes one. Requires `ft_engage_core` 0.5.0.

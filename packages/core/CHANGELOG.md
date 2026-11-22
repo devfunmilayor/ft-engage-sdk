@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.0
+
+- Screen names are cleaned by default: ids, UUIDs and long tokens in a route become `:id` and query strings are dropped, so `/order/8841?tab=2` is the screen `/order/:id`. Turn it off with `normalizeScreens: false` or supply your own `screenName`.
+- Taps on a scrolling screen carry `so` (scroll offset) and `ch` (page height), so heatmaps can show the whole page.
+- The deepest scroll depth is written to storage as it grows and sent on the next start if the app was killed, at its original time and marked `recovered`.
+- `EngageClient.track` accepts an optional `at` time.
+
 ## 0.5.0
 
 - `InsightsRecorder` and `InsightsConfig`: turn screen views, taps, rage taps, scroll depth and a session id into events (`screen.viewed`, `ui.tap`, `ui.rage_tap`, `ui.scroll_depth`). Positions are fractions of the screen, never text. Pure Dart so it can be tested without a device.
