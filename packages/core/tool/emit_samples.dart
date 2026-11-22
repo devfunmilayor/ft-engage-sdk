@@ -45,9 +45,23 @@ Future<void> main() async {
   await client.register(
     const RegisterInfo(platform: 'ios', pushStatus: 'denied'),
   );
+  await client.identify(
+    'user_2',
+    email: 'ada@example.com',
+    phone: '+2348012345678',
+    traits: {'plan': 'free', 'age': 31, 'verified': false, 'nickname': null},
+    marketingConsent: {
+      MarketingChannel.email: true,
+      MarketingChannel.whatsapp: false,
+    },
+  );
   await client.flush(force: true);
   for (final (path, body) in capture.posts) {
-    final kind = path == '/v1/register' ? 'register' : 'batch';
+    final kind = switch (path) {
+      '/v1/register' => 'register',
+      '/v1/identify' => 'identify',
+      _ => 'batch',
+    };
     print(jsonEncode({'kind': kind, 'payload': jsonDecode(body)}));
   }
 }

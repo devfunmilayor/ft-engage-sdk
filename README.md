@@ -11,7 +11,7 @@ Track installs, sessions and funnel steps from a Flutter app, and register the d
 
 ## Status
 
-Version 0.2.0. Works today: identify, track, register, offline queue, retry, consent, `forget()`, lifecycle events, and encrypted on-device storage (Hive CE).
+Version 0.3.0. Works today: identify (user id, email, phone, traits and marketing consent), logout, track, register, offline queue, retry, consent, `forget()`, lifecycle events, and encrypted on-device storage (Hive CE).
 Not built yet: native push token and permission reading (you supply a `PushSource`), Android install referrer, Apple Search Ads token, deep links. Nothing is published to pub.dev.
 
 ## Integrate in about ten minutes
@@ -25,7 +25,7 @@ dependencies:
     git:
       url: https://github.com/devfunmilayor/ft-engage-sdk.git
       path: packages/flutter
-      ref: v0.2.0
+      ref: v0.3.0
 ```
 
 3. Initialise once at startup:
@@ -47,7 +47,12 @@ Future<void> main() async {
 4. Identify and track:
 
 ```dart
-await engage.identify('user_1001');
+await engage.identify(
+  'user_1001',
+  email: 'ada@example.com',
+  traits: {'plan': 'free'},
+  marketingConsent: {MarketingChannel.email: true},
+);
 await engage.track('signup.completed', props: {'plan': 'free'}, screen: 'Signup');
 ```
 

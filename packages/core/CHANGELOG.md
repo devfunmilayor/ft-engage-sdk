@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0
+
+- `identify` now takes optional `email`, `phone`, `traits` and `marketingConsent`, validates them, and delivers them to `/v1/identify` after registration. Waiting identity is stored, merged, retried and cleared like the registration.
+- New `logout()`, and new `InvalidIdentityException`.
+- Existing `identify(userId)` calls keep working, but a user id must now be 1 to 128 characters of letters, digits and `_ . : @ + -`, and the call also links the install to the person on the server.
+
 ## 0.2.0
 
 - Storage is now `EngageStorage`: a key-value store plus an ordered event queue (`EventStorage`). Adding an event no longer rewrites the whole queue.

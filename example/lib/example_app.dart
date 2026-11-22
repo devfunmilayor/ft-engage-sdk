@@ -52,8 +52,11 @@ class _HomePageState extends State<HomePage> {
           Text(_status, key: const Key('status')),
           const SizedBox(height: 12),
           FilledButton(
-            onPressed: () =>
-                _run('Identified', () => widget.engage.identify('user_1001')),
+            onPressed: () => _run(
+              'Identified',
+              () =>
+                  widget.engage.identify('user_1001', traits: {'plan': 'free'}),
+            ),
             child: const Text('Identify'),
           ),
           FilledButton(

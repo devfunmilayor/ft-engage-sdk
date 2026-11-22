@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0
+
+- `identify` accepts email, phone, traits and marketing consent, and there is a new `logout()`. Requires `ft_engage_core` 0.3.0.
+
 ## 0.2.0
 
 - Storage is now Hive CE with AES-256 encryption. The key is kept in the platform keychain or keystore. `shared_preferences` is no longer used.

@@ -126,6 +126,38 @@ void main() {
     engage.dispose();
   });
 
+  test(
+    'identify sends the person after the device is registered and logout stops tagging events',
+    () async {
+      final transport = RecordingTransport();
+      final engage = await start(transport);
+      await engage.identify(
+        'user_1',
+        email: 'ada@example.com',
+        traits: {'plan': 'free'},
+        marketingConsent: {MarketingChannel.email: true},
+      );
+      final paths = [for (final (url, _) in transport.calls) url.path];
+      expect(
+        paths.indexOf('/v1/register'),
+        lessThan(paths.indexOf('/v1/identify')),
+      );
+      final body = transport.calls
+          .firstWhere((c) => c.$1.path == '/v1/identify')
+          .$2;
+      expect(body['userId'], 'user_1');
+      expect(body['consent'], {'email': 'granted'});
+      await engage.logout();
+      await engage.track('after.logout');
+      await engage.flush();
+      final event = transport.events().firstWhere(
+        (e) => e['name'] == 'after.logout',
+      );
+      expect(event.containsKey('userId'), false);
+      engage.dispose();
+    },
+  );
+
   test('forget clears the queue and the identity', () async {
     final transport = RecordingTransport();
     final engage = await start(transport);

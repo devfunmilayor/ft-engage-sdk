@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ft-engage.example/schemas/identify.schema.json",
+  "title": "Identify",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "installId",
+    "userId"
+  ],
+  "properties": {
+    "installId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{8,64}$"
+    },
+    "userId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.:@+-]{1,128}$"
+    },
+    "email": {
+      "type": "string",
+      "maxLength": 320,
+      "pattern": "^[^@\\s]{1,64}@[^@\\s]{1,255}$"
+    },
+    "phone": {
+      "type": "string",
+      "pattern": "^\\+[1-9][0-9]{6,14}$"
+    },
+    "traits": {
+      "type": "object",
+      "maxProperties": 30,
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]{0,39}$",
+        "not": {
+          "pattern": "(^|_)(amount|amounts|fee|fees|rate|rates|price|prices|balance|balances|revenue|volume|usd|total|cost|salary|password|passcode|pin|token|secret|card|cvv|ssn|bvn|nin|account_number)($|_)"
+        }
+      },
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "type": "string",
+            "maxLength": 200
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    "consent": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "email": {
+          "enum": [
+            "granted",
+            "denied"
+          ]
+        },
+        "whatsapp": {
+          "enum": [
+            "granted",
+            "denied"
+          ]
+        },
+        "sms": {
+          "enum": [
+            "granted",
+            "denied"
+          ]
+        }
+      }
+    }
+  }
+}
