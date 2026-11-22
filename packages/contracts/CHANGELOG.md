@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.0
+
+- Added the `replay` schema: a chunk of a wireframe session recording (screens, layout snapshots made of boxes, taps, scroll positions and app state marks). Nodes are a kind and a rectangle, never text.
+
 ## 0.3.0
 
 - `identify` accepts an optional `userHash`, a lowercase hex HMAC-SHA256 of the user id made by your server.

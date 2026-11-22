@@ -47,3 +47,25 @@ export const validateRegister: (value: unknown) => ValidationResult;
 export const validateBatch: (value: unknown) => ValidationResult;
 export const validateIdentify: (value: unknown) => ValidationResult;
 export const MAX_BATCH_SIZE: number;
+
+export type ReplayNodeKind = 't' | 'i' | 'b' | 'f' | 'x' | 'm';
+export type ReplayNode = [ReplayNodeKind, number, number, number, number] | [ReplayNodeKind, number, number, number, number, number];
+
+export type ReplayEvent =
+  | { t: number; k: 'snap'; w: number; h: number; so?: number; n: ReplayNode[] }
+  | { t: number; k: 'tap'; x: number; y: number; dead?: true; rage?: true }
+  | { t: number; k: 'scroll'; so: number; ch?: number }
+  | { t: number; k: 'screen'; name: string }
+  | { t: number; k: 'bg' | 'fg' | 'focus' };
+
+export interface ReplayChunk {
+  installId: string;
+  sid: string;
+  seq: number;
+  startedAt: string;
+  platform?: 'ios' | 'android' | 'web';
+  end?: boolean;
+  events: ReplayEvent[];
+}
+
+export const validateReplay: (value: unknown) => ValidationResult;

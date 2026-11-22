@@ -9,6 +9,7 @@ import 'identity.dart';
 import 'identity_payload.dart';
 import 'property_guard.dart';
 import 'queue.dart';
+import 'replay.dart';
 import 'storage.dart';
 import 'transport.dart';
 
@@ -250,6 +251,26 @@ class EngageClient {
     ).whenComplete(() => _flushing = null);
     _flushing = next;
     return next;
+  }
+
+  Future<ReplayDelivery> postReplay(Map<String, Object?> chunk) async {
+    if (!canCollect) return ReplayDelivery.dropped;
+    try {
+      final response = await _transport.post(
+        _url('/v1/replay'),
+        _headers,
+        jsonEncode(chunk),
+      );
+      final status = response.status;
+      if (status == 200) return ReplayDelivery.sent;
+      if (status == 403) return ReplayDelivery.disabled;
+      if (status == 400 || status == 409 || status == 413 || status == 422) {
+        return ReplayDelivery.dropped;
+      }
+      return ReplayDelivery.retry;
+    } on TransportException {
+      return ReplayDelivery.retry;
+    }
   }
 
   Future<void> forget() async {

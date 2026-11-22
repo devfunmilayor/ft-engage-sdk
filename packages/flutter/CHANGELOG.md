@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.0
+
+- Session replay, off unless you pass `replay: ReplayConfig()` to `FtEngage.init`. It records a wireframe of each screen (boxes, kinds and colours, no text, no images) with the taps and scrolling on it. `EngageSensitive` areas are drawn as masked blocks and their taps are left out. Requires `ft_engage_core` 0.7.0.
+
 ## 0.6.0
 
 - Dead taps are confirmed before they are reported: after a tap that looks dead the plugin waits 400 ms and drops the flag if the app navigated, scrolled, moved focus or drew a new frame, unless the screen was already animating continuously. Requires `ft_engage_core` 0.6.0.

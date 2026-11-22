@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { validateBatch, validateEvent, validateIdentify, validateRegister } from '@ft-engage/contracts';
+import { validateBatch, validateEvent, validateIdentify, validateRegister, validateReplay } from '@ft-engage/contracts';
 
 const output = execFileSync('dart', ['run', 'tool/emit_samples.dart'], {
   cwd: new URL('../packages/core/', import.meta.url),
@@ -12,6 +12,7 @@ for (const line of output.split('\n').filter(Boolean)) {
   const results = [];
   if (kind === 'register') results.push(validateRegister(payload));
   else if (kind === 'identify') results.push(validateIdentify(payload));
+  else if (kind === 'replay') results.push(validateReplay(payload));
   else {
     results.push(validateBatch(payload));
     for (const event of payload.events) results.push(validateEvent(event));
