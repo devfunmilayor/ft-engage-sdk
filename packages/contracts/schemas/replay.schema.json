@@ -1,0 +1,296 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ft-engage.example/schemas/replay.schema.json",
+  "title": "ReplayChunk",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "installId",
+    "sid",
+    "seq",
+    "startedAt",
+    "events"
+  ],
+  "properties": {
+    "installId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{8,64}$"
+    },
+    "sid": {
+      "type": "string",
+      "pattern": "^s[0-9a-f]{8}$"
+    },
+    "seq": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10000
+    },
+    "startedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "platform": {
+      "enum": [
+        "ios",
+        "android",
+        "web"
+      ]
+    },
+    "end": {
+      "type": "boolean"
+    },
+    "events": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 500,
+      "items": {
+        "$ref": "#/$defs/event"
+      }
+    }
+  },
+  "$defs": {
+    "node": {
+      "oneOf": [
+        {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "prefixItems": [
+            {
+              "enum": [
+                "t",
+                "i",
+                "b",
+                "f",
+                "x",
+                "m"
+              ]
+            },
+            {
+              "type": "integer",
+              "minimum": -100000,
+              "maximum": 100000
+            },
+            {
+              "type": "integer",
+              "minimum": -100000,
+              "maximum": 100000
+            },
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100000
+            },
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100000
+            }
+          ],
+          "items": false
+        },
+        {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "prefixItems": [
+            {
+              "enum": [
+                "t",
+                "i",
+                "b",
+                "f",
+                "x",
+                "m"
+              ]
+            },
+            {
+              "type": "integer",
+              "minimum": -100000,
+              "maximum": 100000
+            },
+            {
+              "type": "integer",
+              "minimum": -100000,
+              "maximum": 100000
+            },
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100000
+            },
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100000
+            },
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            }
+          ],
+          "items": false
+        }
+      ]
+    },
+    "event": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "t",
+            "k",
+            "w",
+            "h",
+            "n"
+          ],
+          "properties": {
+            "t": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 86400000
+            },
+            "k": {
+              "const": "snap"
+            },
+            "w": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10000
+            },
+            "h": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10000
+            },
+            "so": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10000000
+            },
+            "n": {
+              "type": "array",
+              "maxItems": 250,
+              "items": {
+                "$ref": "#/$defs/node"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "t",
+            "k",
+            "x",
+            "y"
+          ],
+          "properties": {
+            "t": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 86400000
+            },
+            "k": {
+              "const": "tap"
+            },
+            "x": {
+              "type": "integer",
+              "minimum": -100000,
+              "maximum": 100000
+            },
+            "y": {
+              "type": "integer",
+              "minimum": -100000,
+              "maximum": 100000
+            },
+            "dead": {
+              "const": true
+            },
+            "rage": {
+              "const": true
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "t",
+            "k",
+            "so"
+          ],
+          "properties": {
+            "t": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 86400000
+            },
+            "k": {
+              "const": "scroll"
+            },
+            "so": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10000000
+            },
+            "ch": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10000000
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "t",
+            "k",
+            "name"
+          ],
+          "properties": {
+            "t": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 86400000
+            },
+            "k": {
+              "const": "screen"
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "t",
+            "k"
+          ],
+          "properties": {
+            "t": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 86400000
+            },
+            "k": {
+              "enum": [
+                "bg",
+                "fg",
+                "focus"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

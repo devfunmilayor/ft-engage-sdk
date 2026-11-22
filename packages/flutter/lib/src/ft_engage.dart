@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:ft_engage_core/ft_engage_core.dart';
 
 import 'hive_storage.dart';
 import 'insights/engage_navigator_observer.dart';
+import 'insights/replay_recorder.dart';
 import 'push_source.dart';
 
 class FtEngage with WidgetsBindingObserver {
@@ -13,10 +16,12 @@ class FtEngage with WidgetsBindingObserver {
     this._platform,
     this._appVersion,
     this.insights,
+    this.replay,
   );
 
   final EngageClient client;
   final InsightsRecorder? insights;
+  final ReplayRecorder? replay;
   int navigationEpoch = 0;
   late final NavigatorObserver navigatorObserver = EngageNavigatorObserver(
     this,
@@ -39,6 +44,7 @@ class FtEngage with WidgetsBindingObserver {
     bool observeLifecycle = true,
     String? platformOverride,
     InsightsConfig? insights,
+    ReplayConfig? replay,
   }) async {
     WidgetsFlutterBinding.ensureInitialized();
     final store = storage ?? await HiveStorage.open();
@@ -53,18 +59,33 @@ class FtEngage with WidgetsBindingObserver {
       transport: transport ?? HttpTransport(),
       storage: store,
     );
+    final platform = platformOverride ?? _detectPlatform();
+    final recorder = replay == null
+        ? null
+        : ReplayRecorder(
+            buffer: ReplayBuffer(
+              config: replay,
+              send: client.postReplay,
+              installId: () => client.installId,
+              platform: platform,
+            ),
+          );
+    final insightsConfig =
+        insights ?? (replay == null ? null : const InsightsConfig());
     final instance = FtEngage._(
       client,
       pushSource,
-      platformOverride ?? _detectPlatform(),
+      platform,
       appVersion,
-      insights == null
+      insightsConfig == null
           ? null
           : InsightsRecorder(
-              config: insights,
+              config: insightsConfig,
               track: client.track,
               storage: store,
+              listener: recorder,
             ),
+      recorder,
     );
     await instance.insights?.recover();
     if (observeLifecycle) instance._startObserving();
@@ -116,6 +137,7 @@ class FtEngage with WidgetsBindingObserver {
 
   Future<void> setConsent(ConsentState state) async {
     await client.setConsent(state);
+    if (state == ConsentState.denied) replay?.buffer.clear();
     if (state == ConsentState.granted) await _syncRegistration(force: true);
   }
 
@@ -123,12 +145,14 @@ class FtEngage with WidgetsBindingObserver {
 
   Future<void> forget() async {
     _lastPush = null;
+    replay?.buffer.clear();
     await client.forget();
   }
 
   void dispose() {
     if (_observing) WidgetsBinding.instance.removeObserver(this);
     _observing = false;
+    replay?.dispose();
     client.close();
   }
 
@@ -154,10 +178,13 @@ class FtEngage with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     switch (state) {
       case AppLifecycleState.resumed:
+        replay?.mark('fg');
         client.track('app.foregrounded');
         _syncRegistration();
       case AppLifecycleState.paused:
         insights?.leaveScreen();
+        replay?.mark('bg');
+        unawaited(replay?.buffer.flush() ?? Future<void>.value());
         client.track('app.backgrounded').then((_) => client.flush(force: true));
       default:
         break;

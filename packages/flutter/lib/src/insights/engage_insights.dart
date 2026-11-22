@@ -37,8 +37,14 @@ class _Baseline {
 }
 
 class TapReading {
-  const TapReading({this.dead = true, this.target, this.sensitive = false});
+  const TapReading({
+    this.dead = true,
+    this.target,
+    this.sensitive = false,
+    this.editable = false,
+  });
 
+  final bool editable;
   final bool dead;
   final String? target;
   final bool sensitive;
@@ -59,6 +65,7 @@ bool _handlesTouch(RenderObject target) =>
 
 TapReading readTap(HitTestResult result) {
   var dead = true;
+  var editable = false;
   String? target;
   for (final entry in result.path) {
     final object = entry.target;
@@ -70,9 +77,10 @@ TapReading readTap(HitTestResult result) {
       if (object.interactive) dead = false;
     } else if (object is RenderObject && _handlesTouch(object)) {
       dead = false;
+      if (object is RenderEditable) editable = true;
     }
   }
-  return TapReading(dead: dead, target: target);
+  return TapReading(dead: dead, target: target, editable: editable);
 }
 
 class EngageInsights extends StatefulWidget {
@@ -156,6 +164,7 @@ class _EngageInsightsState extends State<EngageInsights> {
     );
     final reading = readTap(result);
     if (reading.sensitive) return;
+    if (reading.editable) widget.engage.replay?.mark('focus');
     TapSample sample(bool dead) => TapSample(
       x: event.position.dx,
       y: event.position.dy,

@@ -34,6 +34,32 @@ class InsightsConfig {
   final String Function(String)? screenName;
 }
 
+class TapRecord {
+  const TapRecord({
+    required this.x,
+    required this.y,
+    required this.dead,
+    required this.rage,
+  });
+
+  final double x;
+  final double y;
+  final bool dead;
+  final bool rage;
+}
+
+abstract class InsightsListener {
+  const InsightsListener();
+
+  void sessionStarted(String sid) {}
+
+  void screenChanged(String name) {}
+
+  void tapped(TapRecord tap) {}
+
+  void scrolled(double offset, double contentHeight) {}
+}
+
 class TapSample {
   const TapSample({
     required this.x,
@@ -110,6 +136,7 @@ class InsightsRecorder {
     Clock clock = const SystemClock(),
     Random? random,
     EngageStorage? storage,
+    this.listener,
   }) : _track = track,
        _storage = storage,
        _clock = clock,
@@ -120,6 +147,7 @@ class InsightsRecorder {
   final Clock _clock;
   final Random _random;
   final EngageStorage? _storage;
+  final InsightsListener? listener;
   String? _sid;
   bool _sampled = true;
   DateTime? _lastActivity;
@@ -145,6 +173,8 @@ class InsightsRecorder {
           's${List.generate(4, (_) => _random.nextInt(256).toRadixString(16).padLeft(2, '0')).join()}';
       _sampled =
           config.sampleRate >= 1 || _random.nextDouble() < config.sampleRate;
+      _lastActivity = now;
+      listener?.sessionStarted(_sid!);
     }
     _lastActivity = now;
     return _sampled;
@@ -184,6 +214,7 @@ class InsightsRecorder {
     _contentHeight = null;
     _recent.clear();
     _rageActive = false;
+    listener?.screenChanged(clean);
     if (config.screens && sampled) {
       _emit('screen.viewed', {'sid': _sid, 'from': ?previous});
     }
@@ -195,6 +226,15 @@ class InsightsRecorder {
     if (!config.taps || _screen == null) return;
     if (sample.viewportWidth <= 0 || sample.viewportHeight <= 0) return;
     final sampled = _active();
+    final burst = _detectRage(sample);
+    listener?.tapped(
+      TapRecord(
+        x: sample.x,
+        y: sample.y,
+        dead: sample.dead,
+        rage: burst != null,
+      ),
+    );
     if (!sampled || _tapsOnScreen >= config.maxTapsPerScreen) return;
     _tapsOnScreen += 1;
     final props = <String, Object?>{
@@ -209,10 +249,22 @@ class InsightsRecorder {
       'target': ?sample.target,
     };
     _emit('ui.tap', props);
-    _watchRage(sample, props);
+    if (burst != null) {
+      _emit('ui.rage_tap', {
+        'x': props['x'],
+        'y': props['y'],
+        'vw': props['vw'],
+        'vh': props['vh'],
+        'sid': props['sid'],
+        'so': ?props['so'],
+        'ch': ?props['ch'],
+        'taps': burst,
+        'target': ?props['target'],
+      });
+    }
   }
 
-  void _watchRage(TapSample sample, Map<String, Object?> props) {
+  int? _detectRage(TapSample sample) {
     final now = _clock.now();
     _recent.removeWhere((t) => now.difference(t.at) > config.rageWindow);
     if (_recent.isEmpty) _rageActive = false;
@@ -226,18 +278,9 @@ class InsightsRecorder {
         .length;
     if (cluster >= config.rageTaps && !_rageActive) {
       _rageActive = true;
-      _emit('ui.rage_tap', {
-        'x': props['x'],
-        'y': props['y'],
-        'vw': props['vw'],
-        'vh': props['vh'],
-        'sid': props['sid'],
-        'so': ?props['so'],
-        'ch': ?props['ch'],
-        'taps': cluster,
-        'target': ?props['target'],
-      });
+      return cluster;
     }
+    return null;
   }
 
   void metrics({required double offset, required double contentHeight}) {
@@ -249,6 +292,7 @@ class InsightsRecorder {
     }
     _scrollOffset = offset < 0 ? 0 : offset;
     _contentHeight = contentHeight;
+    listener?.scrolled(_scrollOffset!, contentHeight);
   }
 
   void scroll(double fraction, {double? offset, double? contentHeight}) {
