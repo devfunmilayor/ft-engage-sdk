@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.0
+
+- `EngageConfig.appId` is sent as the `x-engage-app` header on every request, so a project can limit a key to named apps. It is a label, not proof of identity: anyone can copy it, so pair it with an origin list for browsers and a daily quota.
+
 ## 0.7.0
 
 - `ReplayBuffer` and `ReplayConfig`: record a session as wireframe snapshots plus taps, scrolls and app state marks, cut into chunks and sent with `EngageClient.postReplay`. Chunks that cannot be delivered are kept (the newest 20) and retried, and a server that has replay turned off stops the recording.

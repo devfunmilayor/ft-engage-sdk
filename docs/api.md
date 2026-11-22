@@ -4,7 +4,7 @@
 
 | Member | Purpose |
 |---|---|
-| `FtEngage.init({publicKey, endpoint, requireConsent, appVersion, pushSource, transport, storage, flushInterval, observeLifecycle, insights, replay})` | Create the client. `publicKey` and `endpoint` are required, and there is no default endpoint. |
+| `FtEngage.init({publicKey, endpoint, requireConsent, appVersion, appId, pushSource, transport, storage, flushInterval, observeLifecycle, insights, replay})` | Create the client. `publicKey` and `endpoint` are required, and there is no default endpoint. |
 | `identify(userId, {userHash, email, phone, traits, marketingConsent})` | Link this install to a person and tag later events with the user id. Sends `/v1/identify` after registration. Throws `InvalidIdentityException` for a bad value. See below. |
 | `logout()` | Stop tagging events with the user id and drop any identity still waiting to be sent. Keeps the install id and consent. |
 | `track(name, {props, screen})` | Queue an event. Throws `InvalidEventException` for a bad name or property. |

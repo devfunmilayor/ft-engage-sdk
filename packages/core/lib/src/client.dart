@@ -298,6 +298,7 @@ class EngageClient {
   Map<String, String> get _headers => {
     'content-type': 'application/json',
     'authorization': 'Bearer ${config.publicKey}',
+    'x-engage-app': ?config.appId,
   };
 
   Uri _url(String path) => config.endpoint.replace(
