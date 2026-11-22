@@ -1,0 +1,26 @@
+{
+  "name": "@ft-engage/contracts",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "schemas"
+  ],
+  "scripts": {
+    "test": "node --test \"test/**/*.test.*\""
+  },
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1"
+  },
+  "license": "Apache-2.0",
+  "description": "JSON Schemas for the FT.Engage wire format: events, batches and device registration.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/devfunmilayor/ft-engage-sdk.git",
+    "directory": "packages/contracts"
+  }
+}

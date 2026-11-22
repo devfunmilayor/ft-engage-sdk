@@ -1,0 +1,17 @@
+name: ft_engage_flutter
+description: Flutter plugin for the FT.Engage SDK with lifecycle events, device registration and push state.
+version: 0.1.0
+repository: https://github.com/devfunmilayor/ft-engage-sdk/tree/main/packages/flutter
+resolution: workspace
+environment:
+  sdk: ^3.9.0
+  flutter: ">=3.35.0"
+dependencies:
+  flutter:
+    sdk: flutter
+  ft_engage_core: ^0.1.0
+  shared_preferences: ^2.3.3
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ft-engage.example/schemas/batch.schema.json",
+  "title": "Batch envelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["events"],
+  "properties": {
+    "sentAt": { "type": "string", "format": "date-time" },
+    "events": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 50,
+      "items": { "type": "object" }
+    }
+  }
+}

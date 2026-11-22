@@ -1,0 +1,135 @@
+import 'dart:convert';
+
+import 'package:flutter/widgets.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:ft_engage_flutter/ft_engage_flutter.dart';
+
+class RecordingTransport implements Transport {
+  final List<(Uri, Map<String, dynamic>)> calls = [];
+
+  @override
+  Future<TransportResponse> post(
+    Uri url,
+    Map<String, String> headers,
+    String body,
+  ) async {
+    calls.add((url, jsonDecode(body) as Map<String, dynamic>));
+    return const TransportResponse(200, '{}');
+  }
+
+  List<Map<String, dynamic>> events() => [
+    for (final (url, body) in calls)
+      if (url.path == '/v1/events')
+        ...(body['events'] as List<dynamic>).cast<Map<String, dynamic>>(),
+  ];
+}
+
+class FixedPush implements PushSource {
+  FixedPush(this.state);
+
+  PushState state;
+
+  @override
+  Future<PushState> read() async => state;
+}
+
+const key = 'pk_test_abcdefghijklmnopqrstuvwxyz012345';
+
+Future<FtEngage> start(
+  RecordingTransport transport, {
+  PushSource? push,
+  bool consent = false,
+  bool observe = false,
+}) => FtEngage.init(
+  publicKey: key,
+  endpoint: Uri.parse('https://api.example.com'),
+  transport: transport,
+  store: MemoryStore(),
+  pushSource: push,
+  requireConsent: consent,
+  observeLifecycle: observe,
+  flushInterval: null,
+  platformOverride: 'android',
+  appVersion: '1.2.3',
+);
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  test(
+    'init registers the device with push state and queues app.opened',
+    () async {
+      final transport = RecordingTransport();
+      final engage = await start(
+        transport,
+        push: FixedPush(
+          const PushState(
+            status: 'granted',
+            token: 'fcm_token_0000000000000000',
+          ),
+        ),
+      );
+      final register = transport.calls
+          .firstWhere((c) => c.$1.path == '/v1/register')
+          .$2;
+      expect(register['platform'], 'android');
+      expect(register['pushToken'], 'fcm_token_0000000000000000');
+      expect(register['appVersion'], '1.2.3');
+      expect(engage.client.pendingCount, 1);
+      await engage.flush();
+      expect(transport.events().single['name'], 'app.opened');
+      engage.dispose();
+    },
+  );
+
+  test('with consent required nothing is sent until granted', () async {
+    final transport = RecordingTransport();
+    final engage = await start(transport, consent: true);
+    await engage.flush();
+    expect(transport.calls, isEmpty);
+    await engage.setConsent(ConsentState.granted);
+    expect(transport.calls.any((c) => c.$1.path == '/v1/register'), isTrue);
+    engage.dispose();
+  });
+
+  testWidgets('foreground and background transitions are tracked and flushed', (
+    tester,
+  ) async {
+    final transport = RecordingTransport();
+    late FtEngage engage;
+    await tester.runAsync(
+      () async => engage = await start(transport, observe: true),
+    );
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 50)),
+    );
+    expect(
+      transport.events().map((e) => e['name']),
+      containsAll(['app.opened', 'app.backgrounded']),
+    );
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.runAsync(() async => engage.flush());
+    expect(
+      transport.events().map((e) => e['name']),
+      contains('app.foregrounded'),
+    );
+    engage.dispose();
+  });
+
+  test('forget clears the queue and the identity', () async {
+    final transport = RecordingTransport();
+    final engage = await start(transport);
+    await engage.identify('user_1');
+    final before = engage.client.installId;
+    await engage.forget();
+    expect(engage.client.pendingCount, 0);
+    expect(engage.client.userId, isNull);
+    expect(engage.client.installId, isNot(before));
+    engage.dispose();
+  });
+}

@@ -1,0 +1,11 @@
+node_modules/
+.dart_tool/
+build/
+pubspec.lock
+*.iml
+.idea/
+.DS_Store
+.env
+.env.*
+*.p8
+*.pem

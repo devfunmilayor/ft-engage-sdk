@@ -1,0 +1,10 @@
+{
+  "name": "ft-engage-sdk",
+  "private": true,
+  "type": "module",
+  "workspaces": ["packages/contracts"],
+  "scripts": {
+    "test:contracts": "npm test -w @ft-engage/contracts",
+    "verify:wire": "node tools/verify_wire.mjs"
+  }
+}
