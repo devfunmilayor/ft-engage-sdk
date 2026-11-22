@@ -1,6 +1,6 @@
 # ft_engage_flutter
 
-Flutter plugin for FT.Engage. It stores state with shared preferences, tracks app lifecycle events, registers the device and reports push permission state.
+Flutter plugin for FT.Engage. It stores state in encrypted Hive CE boxes, tracks app lifecycle events, registers the device and reports push permission state.
 
 ```dart
 final engage = await FtEngage.init(
