@@ -72,7 +72,21 @@ class FtEngage with WidgetsBindingObserver {
     String? screen,
   }) => client.track(name, props: props, screen: screen);
 
-  Future<void> identify(String userId) => client.identify(userId);
+  Future<void> identify(
+    String userId, {
+    String? email,
+    String? phone,
+    Map<String, Object?> traits = const {},
+    Map<MarketingChannel, bool> marketingConsent = const {},
+  }) => client.identify(
+    userId,
+    email: email,
+    phone: phone,
+    traits: traits,
+    marketingConsent: marketingConsent,
+  );
+
+  Future<void> logout() => client.logout();
 
   Future<void> setConsent(ConsentState state) async {
     await client.setConsent(state);
