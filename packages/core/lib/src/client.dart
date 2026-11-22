@@ -6,6 +6,7 @@ import 'clock.dart';
 import 'config.dart';
 import 'consent.dart';
 import 'identity.dart';
+import 'identity_payload.dart';
 import 'property_guard.dart';
 import 'queue.dart';
 import 'storage.dart';
@@ -57,12 +58,14 @@ class EngageClient {
     this._userId,
     this._consent,
     this._pendingRegister,
+    this._pendingIdentify,
   );
 
   static const _installKey = 'ft_engage.install_id';
   static const _userKey = 'ft_engage.user_id';
   static const _consentKey = 'ft_engage.consent';
   static const _registerKey = 'ft_engage.register';
+  static const _identifyKey = 'ft_engage.identify';
   static const _baseBackoff = Duration(seconds: 5);
   static const _maxBackoff = Duration(minutes: 5);
 
@@ -76,6 +79,7 @@ class EngageClient {
   String? _userId;
   ConsentState _consent;
   Map<String, Object?>? _pendingRegister;
+  Map<String, Object?>? _pendingIdentify;
   int _failures = 0;
   DateTime? _retryAt;
   Future<FlushResult>? _flushing;
@@ -104,6 +108,7 @@ class EngageClient {
       orElse: () => ConsentState.unknown,
     );
     final rawRegister = await kv.read(_registerKey);
+    final rawIdentify = await kv.read(_identifyKey);
     final client = EngageClient._(
       config,
       kv,
@@ -117,6 +122,9 @@ class EngageClient {
       rawRegister == null
           ? null
           : Map<String, Object?>.from(jsonDecode(rawRegister) as Map),
+      rawIdentify == null
+          ? null
+          : Map<String, Object?>.from(jsonDecode(rawIdentify) as Map),
     );
     final interval = config.flushInterval;
     if (interval != null) {
@@ -141,20 +149,46 @@ class EngageClient {
     if (state == ConsentState.denied) {
       await _queue.clear();
       _pendingRegister = null;
+      _pendingIdentify = null;
       await _store.delete(_registerKey);
+      await _store.delete(_identifyKey);
     }
   }
 
-  Future<void> identify(String userId) async {
-    if (userId.isEmpty || userId.length > 128) {
-      throw ArgumentError.value(
-        userId,
-        'userId',
-        'must be 1 to 128 characters',
-      );
-    }
+  Future<void> identify(
+    String userId, {
+    String? email,
+    String? phone,
+    Map<String, Object?> traits = const {},
+    Map<MarketingChannel, bool> marketingConsent = const {},
+  }) async {
+    validateIdentity(
+      userId: userId,
+      email: email,
+      phone: phone,
+      traits: traits,
+    );
     _userId = userId;
     await _store.write(_userKey, userId);
+    if (!canCollect) return;
+    _pendingIdentify = buildIdentify(
+      installId: _installId,
+      userId: userId,
+      email: email,
+      phone: phone,
+      traits: traits,
+      marketingConsent: marketingConsent,
+      pending: _pendingIdentify,
+    );
+    await _store.write(_identifyKey, jsonEncode(_pendingIdentify));
+    await flush(force: true);
+  }
+
+  Future<void> logout() async {
+    _userId = null;
+    _pendingIdentify = null;
+    await _store.delete(_userKey);
+    await _store.delete(_identifyKey);
   }
 
   Future<void> register(RegisterInfo info) async {
@@ -217,10 +251,17 @@ class EngageClient {
   Future<void> forget() async {
     _timer?.cancel();
     await _queue.clear();
-    for (final key in [_installKey, _userKey, _consentKey, _registerKey]) {
+    for (final key in [
+      _installKey,
+      _userKey,
+      _consentKey,
+      _registerKey,
+      _identifyKey,
+    ]) {
       await _store.delete(key);
     }
     _pendingRegister = null;
+    _pendingIdentify = null;
     _userId = null;
     _consent = ConsentState.unknown;
     _installId = _ids.install();
@@ -274,6 +315,27 @@ class EngageClient {
         if (status == 200 || status == 400) {
           _pendingRegister = null;
           await _store.delete(_registerKey);
+        } else {
+          _fail();
+          return _result(0, 0, status);
+        }
+      } on TransportException {
+        _fail();
+        return _result(0, 0, null);
+      }
+    }
+    final identify = _pendingIdentify;
+    if (identify != null) {
+      try {
+        final response = await _transport.post(
+          _url('/v1/identify'),
+          _headers,
+          jsonEncode(identify),
+        );
+        status = response.status;
+        if (status == 200 || status == 400) {
+          _pendingIdentify = null;
+          await _store.delete(_identifyKey);
         } else {
           _fail();
           return _result(0, 0, status);

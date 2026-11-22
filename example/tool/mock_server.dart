@@ -23,6 +23,9 @@ Future<void> main(List<String> args) async {
     if (request.uri.path == '/v1/register') {
       stdout.writeln('register ${jsonEncode(body)}');
       request.response.write(jsonEncode({'ok': true}));
+    } else if (request.uri.path == '/v1/identify') {
+      stdout.writeln('identify ${body['userId']}');
+      request.response.write(jsonEncode({'ok': true, 'consentIgnored': []}));
     } else if (request.uri.path == '/v1/events') {
       final events = (body['events'] as List<dynamic>)
           .cast<Map<String, dynamic>>();

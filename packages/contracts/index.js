@@ -24,4 +24,5 @@ const compile = (name) => {
 export const validateEvent = compile('event');
 export const validateRegister = compile('register');
 export const validateBatch = compile('batch');
+export const validateIdentify = compile('identify');
 export const MAX_BATCH_SIZE = 50;

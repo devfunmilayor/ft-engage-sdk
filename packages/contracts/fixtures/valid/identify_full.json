@@ -1,0 +1,16 @@
+{
+  "installId": "inst_00000001",
+  "userId": "user_42",
+  "email": "ada@example.com",
+  "phone": "+2348012345678",
+  "traits": {
+    "plan": "free",
+    "age": 31,
+    "verified_phone": false,
+    "nickname": null
+  },
+  "consent": {
+    "email": "granted",
+    "whatsapp": "denied"
+  }
+}
