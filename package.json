@@ -5,6 +5,6 @@
   "workspaces": ["packages/contracts"],
   "scripts": {
     "test:contracts": "npm test -w @ft-engage/contracts",
-    "verify:wire": "node tools/verify_wire.mjs"
+    "verify:wire": "node packages/contracts/tool/verify_wire.mjs"
   }
 }
