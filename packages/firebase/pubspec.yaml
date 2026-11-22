@@ -1,0 +1,17 @@
+name: ft_engage_firebase
+description: Firebase Cloud Messaging push source for the FT.Engage Flutter SDK. Reads the notification permission and the FCM token, and re-registers when the token changes.
+version: 0.8.0
+repository: https://github.com/devfunmilayor/ft-engage-sdk/tree/main/packages/firebase
+resolution: workspace
+environment:
+  sdk: ^3.9.0
+  flutter: ">=3.35.0"
+dependencies:
+  firebase_messaging: ^16.0.0
+  flutter:
+    sdk: flutter
+  ft_engage_flutter: ^0.8.0
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0

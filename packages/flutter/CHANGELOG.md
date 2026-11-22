@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.0
+
+- `PushChanges` and `PushPermission` are optional extras for a `PushSource`. A source that implements `PushChanges` makes the plugin register again when the token or permission changes, and `FtEngage.requestPushPermission()` asks through a source that implements `PushPermission`.
+
 ## 0.7.0
 
 - Session replay, off unless you pass `replay: ReplayConfig()` to `FtEngage.init`. It records a wireframe of each screen (boxes, kinds and colours, no text, no images) with the taps and scrolling on it. `EngageSensitive` areas are drawn as masked blocks and their taps are left out. Requires `ft_engage_core` 0.7.0.

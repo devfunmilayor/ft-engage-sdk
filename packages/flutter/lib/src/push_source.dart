@@ -17,3 +17,11 @@ class PushState {
 abstract interface class PushSource {
   Future<PushState> read();
 }
+
+abstract interface class PushChanges {
+  Stream<void> get changes;
+}
+
+abstract interface class PushPermission {
+  Future<PushState> request();
+}

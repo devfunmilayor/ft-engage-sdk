@@ -11,7 +11,7 @@ Track installs, sessions and funnel steps from a Flutter app, and register the d
 
 ## Status
 
-Version 0.7.0. Opt-in session replay (wireframes, never text or pixels). Opt-in behaviour insights (screens, taps, rage and dead taps, scroll depth). Signed identity (`userHash`). Works today: identify (user id, email, phone, traits and marketing consent), logout, track, register, offline queue, retry, consent, `forget()`, lifecycle events, and encrypted on-device storage (Hive CE).
+Version 0.8.0. Firebase push source (`ft_engage_firebase`) with token refresh and a permission request. Opt-in session replay (wireframes, never text or pixels). Opt-in behaviour insights (screens, taps, rage and dead taps, scroll depth). Signed identity (`userHash`). Works today: identify (user id, email, phone, traits and marketing consent), logout, track, register, offline queue, retry, consent, `forget()`, lifecycle events, and encrypted on-device storage (Hive CE).
 Not built yet: native push token and permission reading (you supply a `PushSource`), Android install referrer, Apple Search Ads token, deep links. Nothing is published to pub.dev.
 
 ## Integrate in about ten minutes
@@ -25,7 +25,7 @@ dependencies:
     git:
       url: https://github.com/devfunmilayor/ft-engage-sdk.git
       path: packages/flutter
-      ref: v0.7.0
+      ref: v0.8.0
 ```
 
 3. Initialise once at startup:
@@ -65,6 +65,7 @@ Try it without a server: `dart run example/tool/mock_server.dart`, then run the 
 - [Getting started](docs/getting-started.md)
 - [Behaviour insights](docs/insights.md)
 - [Session replay](docs/replay.md)
+- [Push notifications](docs/push.md)
 - [API reference](docs/api.md)
 - [Event naming](docs/event-naming.md)
 - [Privacy and data collected](docs/privacy.md)

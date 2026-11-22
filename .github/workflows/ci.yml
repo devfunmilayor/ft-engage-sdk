@@ -35,6 +35,7 @@ jobs:
       - run: flutter analyze --fatal-infos
       - run: cd packages/core && dart test
       - run: cd packages/flutter && flutter test
+      - run: cd packages/firebase && flutter test
       - run: cd example && flutter test
 
   publish-dry-run:
