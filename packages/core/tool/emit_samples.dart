@@ -57,6 +57,27 @@ Future<void> main() async {
       MarketingChannel.whatsapp: false,
     },
   );
+  final insights = InsightsRecorder(
+    config: const InsightsConfig(),
+    track: client.track,
+  );
+  insights.screenViewed('home');
+  for (var i = 0; i < 3; i++) {
+    insights.tap(
+      const TapSample(
+        x: 100,
+        y: 200,
+        viewportWidth: 400,
+        viewportHeight: 800,
+        dead: true,
+        target: 'buy_button',
+      ),
+    );
+  }
+  insights.scroll(0.62);
+  insights.screenViewed('signup');
+  insights.leaveScreen();
+  await Future<void>.delayed(Duration.zero);
   await client.flush(force: true);
   for (final (path, body) in capture.posts) {
     final kind = switch (path) {

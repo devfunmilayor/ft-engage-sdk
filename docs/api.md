@@ -4,12 +4,14 @@
 
 | Member | Purpose |
 |---|---|
-| `FtEngage.init({publicKey, endpoint, requireConsent, appVersion, pushSource, transport, storage, flushInterval, observeLifecycle})` | Create the client. `publicKey` and `endpoint` are required, and there is no default endpoint. |
+| `FtEngage.init({publicKey, endpoint, requireConsent, appVersion, pushSource, transport, storage, flushInterval, observeLifecycle, insights})` | Create the client. `publicKey` and `endpoint` are required, and there is no default endpoint. |
 | `identify(userId, {userHash, email, phone, traits, marketingConsent})` | Link this install to a person and tag later events with the user id. Sends `/v1/identify` after registration. Throws `InvalidIdentityException` for a bad value. See below. |
 | `logout()` | Stop tagging events with the user id and drop any identity still waiting to be sent. Keeps the install id and consent. |
 | `track(name, {props, screen})` | Queue an event. Throws `InvalidEventException` for a bad name or property. |
 | `setConsent(state)` | `granted`, `denied` or `unknown`. |
 | `flush()` | Send queued events now. Returns a `FlushResult`. |
+| `screen(name)` | Record that a screen appeared, for apps without named routes. Does nothing unless insights are on. |
+| `navigatorObserver` | Add to `navigatorObservers` so named routes become screens. |
 | `forget()` | Clear identity, queue, consent and registration, and issue a new install id. |
 | `dispose()` | Stop lifecycle observation and timers. |
 | `client` | The underlying `EngageClient`. |

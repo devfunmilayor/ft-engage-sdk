@@ -3,12 +3,23 @@ import 'package:flutter/widgets.dart';
 import 'package:ft_engage_core/ft_engage_core.dart';
 
 import 'hive_storage.dart';
+import 'insights/engage_navigator_observer.dart';
 import 'push_source.dart';
 
 class FtEngage with WidgetsBindingObserver {
-  FtEngage._(this.client, this._pushSource, this._platform, this._appVersion);
+  FtEngage._(
+    this.client,
+    this._pushSource,
+    this._platform,
+    this._appVersion,
+    this.insights,
+  );
 
   final EngageClient client;
+  final InsightsRecorder? insights;
+  late final NavigatorObserver navigatorObserver = EngageNavigatorObserver(
+    this,
+  );
   final PushSource? _pushSource;
   final String? _platform;
   final String? _appVersion;
@@ -26,6 +37,7 @@ class FtEngage with WidgetsBindingObserver {
     Duration? flushInterval = const Duration(seconds: 30),
     bool observeLifecycle = true,
     String? platformOverride,
+    InsightsConfig? insights,
   }) async {
     WidgetsFlutterBinding.ensureInitialized();
     final client = await EngageClient.create(
@@ -44,6 +56,9 @@ class FtEngage with WidgetsBindingObserver {
       pushSource,
       platformOverride ?? _detectPlatform(),
       appVersion,
+      insights == null
+          ? null
+          : InsightsRecorder(config: insights, track: client.track),
     );
     if (observeLifecycle) instance._startObserving();
     await instance._syncRegistration();
@@ -71,6 +86,8 @@ class FtEngage with WidgetsBindingObserver {
     Map<String, Object?> props = const {},
     String? screen,
   }) => client.track(name, props: props, screen: screen);
+
+  void screen(String name) => insights?.screenViewed(name);
 
   Future<void> identify(
     String userId, {
@@ -133,6 +150,7 @@ class FtEngage with WidgetsBindingObserver {
         client.track('app.foregrounded');
         _syncRegistration();
       case AppLifecycleState.paused:
+        insights?.leaveScreen();
         client.track('app.backgrounded').then((_) => client.flush(force: true));
       default:
         break;
