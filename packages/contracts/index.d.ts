@@ -35,6 +35,7 @@ export type ConsentChannel = 'email' | 'whatsapp' | 'sms';
 export interface IdentifyPayload {
   installId: string;
   userId: string;
+  userHash?: string;
   email?: string;
   phone?: string;
   traits?: Record<string, TraitValue>;

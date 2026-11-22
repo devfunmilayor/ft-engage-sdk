@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.0
+
+- `identify` accepts `userHash`. Requires `ft_engage_core` 0.4.0.
+
 ## 0.3.0
 
 - `identify` accepts email, phone, traits and marketing consent, and there is a new `logout()`. Requires `ft_engage_core` 0.3.0.

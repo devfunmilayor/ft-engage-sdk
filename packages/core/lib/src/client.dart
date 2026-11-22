@@ -157,6 +157,7 @@ class EngageClient {
 
   Future<void> identify(
     String userId, {
+    String? userHash,
     String? email,
     String? phone,
     Map<String, Object?> traits = const {},
@@ -164,6 +165,7 @@ class EngageClient {
   }) async {
     validateIdentity(
       userId: userId,
+      userHash: userHash,
       email: email,
       phone: phone,
       traits: traits,
@@ -174,6 +176,7 @@ class EngageClient {
     _pendingIdentify = buildIdentify(
       installId: _installId,
       userId: userId,
+      userHash: userHash,
       email: email,
       phone: phone,
       traits: traits,

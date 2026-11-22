@@ -1,6 +1,6 @@
 import 'exceptions.dart';
 
-const sdkVersion = '0.3.0';
+const sdkVersion = '0.4.0';
 const maxBatchSize = 50;
 
 class EngageConfig {

@@ -74,12 +74,14 @@ class FtEngage with WidgetsBindingObserver {
 
   Future<void> identify(
     String userId, {
+    String? userHash,
     String? email,
     String? phone,
     Map<String, Object?> traits = const {},
     Map<MarketingChannel, bool> marketingConsent = const {},
   }) => client.identify(
     userId,
+    userHash: userHash,
     email: email,
     phone: phone,
     traits: traits,
