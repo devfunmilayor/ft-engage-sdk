@@ -1,0 +1,12 @@
+name: ft_engage_core
+description: Pure Dart core of the FT.Engage SDK with identity, an offline queue, batching, retry and consent.
+version: 0.1.0
+repository: https://github.com/devfunmilayor/ft-engage-sdk/tree/main/packages/core
+resolution: workspace
+environment:
+  sdk: ^3.9.0
+dependencies:
+  http: ^1.2.2
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.25.0

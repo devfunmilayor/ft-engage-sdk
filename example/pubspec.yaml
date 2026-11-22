@@ -1,0 +1,17 @@
+name: ft_engage_example
+description: Example app for the FT.Engage SDK that runs against the bundled mock server.
+publish_to: none
+resolution: workspace
+environment:
+  sdk: ^3.9.0
+  flutter: ">=3.35.0"
+dependencies:
+  flutter:
+    sdk: flutter
+  ft_engage_flutter: ^0.1.0
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+flutter:
+  uses-material-design: true
