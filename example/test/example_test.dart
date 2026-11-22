@@ -38,7 +38,7 @@ void main() {
           publicKey: 'pk_test_abcdefghijklmnopqrstuvwxyz012345',
           endpoint: Uri.parse('http://localhost:8788'),
           transport: transport,
-          store: MemoryStore(),
+          storage: MemoryStore(),
           observeLifecycle: false,
           flushInterval: null,
           platformOverride: 'android',

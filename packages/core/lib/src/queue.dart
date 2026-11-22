@@ -2,49 +2,63 @@ import 'dart:convert';
 
 import 'storage.dart';
 
+class QueueBatch {
+  const QueueBatch(this.events, this.rawCount);
+
+  final List<Map<String, Object?>> events;
+  final int rawCount;
+}
+
 class EventQueue {
-  EventQueue(this._store, this._maxSize);
+  EventQueue(this._storage, this._maxSize);
 
-  static const storageKey = 'ft_engage.queue';
-
-  final KeyValueStore _store;
+  final EventStorage _storage;
   final int _maxSize;
-  List<Map<String, Object?>> _items = [];
+  int _length = 0;
+  Future<void> _tail = Future<void>.value();
 
-  int get length => _items.length;
+  Future<T> _serial<T>(Future<T> Function() operation) {
+    final result = _tail.then((_) => operation());
+    _tail = result.then<void>((_) {}, onError: (Object _) {});
+    return result;
+  }
 
-  Future<void> load() async {
-    final raw = await _store.read(storageKey);
-    if (raw == null) return;
-    try {
-      final decoded = jsonDecode(raw) as List<Object?>;
-      _items = [
-        for (final item in decoded) Map<String, Object?>.from(item! as Map),
-      ];
-    } on Object {
-      _items = [];
+  int get length => _length;
+
+  Future<void> load() => _serial(() async {
+    _length = await _storage.length();
+  });
+
+  Future<void> add(Map<String, Object?> event) => _serial(() async {
+    await _storage.append(jsonEncode(event));
+    _length += 1;
+    final overflow = _length - _maxSize;
+    if (overflow > 0) {
+      await _storage.removeFirst(overflow);
+      _length -= overflow;
     }
-  }
+  });
 
-  Future<void> add(Map<String, Object?> event) async {
-    _items.add(event);
-    if (_items.length > _maxSize) {
-      _items = _items.sublist(_items.length - _maxSize);
+  Future<QueueBatch> head(int count) => _serial(() async {
+    final raw = await _storage.head(count);
+    final events = <Map<String, Object?>>[];
+    for (final json in raw) {
+      try {
+        events.add(Map<String, Object?>.from(jsonDecode(json) as Map));
+      } on Object {
+        continue;
+      }
     }
-    await _save();
-  }
+    return QueueBatch(events, raw.length);
+  });
 
-  List<Map<String, Object?>> head(int count) => _items.take(count).toList();
+  Future<void> removeFirst(int count) => _serial(() async {
+    await _storage.removeFirst(count);
+    _length = (_length - count).clamp(0, _length);
+  });
 
-  Future<void> removeFirst(int count) async {
-    _items = _items.skip(count).toList();
-    await _save();
-  }
-
-  Future<void> clear() async {
-    _items = [];
-    await _store.delete(storageKey);
-  }
-
-  Future<void> _save() => _store.write(storageKey, jsonEncode(_items));
+  Future<void> clear() => _serial(() async {
+    await _storage.clear();
+    _length = 0;
+  });
 }

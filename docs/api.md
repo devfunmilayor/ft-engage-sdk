@@ -4,7 +4,7 @@
 
 | Member | Purpose |
 |---|---|
-| `FtEngage.init({publicKey, endpoint, requireConsent, appVersion, pushSource, transport, store, flushInterval, observeLifecycle})` | Create the client. `publicKey` and `endpoint` are required, and there is no default endpoint. |
+| `FtEngage.init({publicKey, endpoint, requireConsent, appVersion, pushSource, transport, storage, flushInterval, observeLifecycle})` | Create the client. `publicKey` and `endpoint` are required, and there is no default endpoint. |
 | `identify(userId)` | Attach a user id (1 to 128 characters) to later events. |
 | `track(name, {props, screen})` | Queue an event. Throws `InvalidEventException` for a bad name or property. |
 | `setConsent(state)` | `granted`, `denied` or `unknown`. |
@@ -17,7 +17,7 @@ Automatic events: `app.opened` on init, `app.foregrounded` on resume, `app.backg
 
 ## EngageClient (ft_engage_core)
 
-Same methods, plus `register(RegisterInfo)`, `installId`, `userId`, `consent`, `pendingCount` and `flush({force})`. Inject `Transport`, `KeyValueStore`, `Clock` and `IdGenerator` for tests.
+Same methods, plus `register(RegisterInfo)`, `installId`, `userId`, `consent`, `pendingCount` and `flush({force})`. Inject `Transport`, `EngageStorage`, `Clock` and `IdGenerator` for tests. `EngageStorage` combines a small key-value store with an ordered event queue, and `MemoryStore` is the in-memory version.
 
 ## Delivery
 

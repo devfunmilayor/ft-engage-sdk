@@ -9,7 +9,7 @@ final client = await EngageClient.create(
     endpoint: Uri.parse('https://your-api.example.com'),
   ),
   transport: HttpTransport(),
-  store: myKeyValueStore,
+  storage: myEngageStorage,
 );
 await client.identify('user_1001');
 await client.track('signup.completed', props: {'plan': 'free'});

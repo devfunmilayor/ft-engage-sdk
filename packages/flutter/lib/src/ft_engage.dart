@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:ft_engage_core/ft_engage_core.dart';
 
-import 'prefs_store.dart';
+import 'hive_storage.dart';
 import 'push_source.dart';
 
 class FtEngage with WidgetsBindingObserver {
@@ -22,7 +22,7 @@ class FtEngage with WidgetsBindingObserver {
     String? appVersion,
     PushSource? pushSource,
     Transport? transport,
-    KeyValueStore? store,
+    EngageStorage? storage,
     Duration? flushInterval = const Duration(seconds: 30),
     bool observeLifecycle = true,
     String? platformOverride,
@@ -37,7 +37,7 @@ class FtEngage with WidgetsBindingObserver {
         appVersion: appVersion,
       ),
       transport: transport ?? HttpTransport(),
-      store: store ?? PrefsStore.create(),
+      storage: storage ?? await HiveStorage.open(),
     );
     final instance = FtEngage._(
       client,
