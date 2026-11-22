@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.0
+
+- Opt-in behaviour insights: pass `insights: InsightsConfig()` to `FtEngage.init`, wrap the app in `EngageInsights`, and add `engage.navigatorObserver` to your navigator. Captures taps (with dead taps), rage taps, screens and scroll depth. `EngageTarget` names a part of the screen and `EngageSensitive` excludes one. Requires `ft_engage_core` 0.5.0.
+
 ## 0.4.0
 
 - `identify` accepts `userHash`. Requires `ft_engage_core` 0.4.0.
