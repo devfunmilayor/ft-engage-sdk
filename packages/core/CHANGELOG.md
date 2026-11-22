@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.0
+
+- `identify` accepts `userHash`, the HMAC your server makes for the user id, for projects that require signed identity. It is validated, kept when calls merge, and dropped when a different user identifies.
+
 ## 0.3.0
 
 - `identify` now takes optional `email`, `phone`, `traits` and `marketingConsent`, validates them, and delivers them to `/v1/identify` after registration. Waiting identity is stored, merged, retried and cleared like the registration.

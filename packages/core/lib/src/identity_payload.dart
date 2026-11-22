@@ -4,6 +4,7 @@ enum MarketingChannel { email, whatsapp, sms }
 
 final _userId = RegExp(r'^[A-Za-z0-9_.:@+-]{1,128}$');
 final _email = RegExp(r'^[^@\s]{1,64}@[^@\s]{1,255}$');
+final _hash = RegExp(r'^[a-f0-9]{64}$');
 final _phone = RegExp(r'^\+[1-9][0-9]{6,14}$');
 final _trait = RegExp(r'^[a-z][a-z0-9_]{0,39}$');
 final _sensitive = RegExp(
@@ -14,10 +15,16 @@ const maxTraits = 30;
 
 void validateIdentity({
   required String userId,
+  String? userHash,
   String? email,
   String? phone,
   Map<String, Object?> traits = const {},
 }) {
+  if (userHash != null && !_hash.hasMatch(userHash)) {
+    throw const InvalidIdentityException(
+      'userHash must be 64 lowercase hex characters made by your server.',
+    );
+  }
   if (!_userId.hasMatch(userId)) {
     throw const InvalidIdentityException(
       'userId must be 1 to 128 characters: letters, digits and _ . : @ + -',
@@ -70,6 +77,7 @@ void validateIdentity({
 Map<String, Object?> buildIdentify({
   required String installId,
   required String userId,
+  String? userHash,
   String? email,
   String? phone,
   Map<String, Object?> traits = const {},
@@ -91,9 +99,11 @@ Map<String, Object?> buildIdentify({
   };
   final oldEmail = same ? pending['email'] : null;
   final oldPhone = same ? pending['phone'] : null;
+  final oldHash = same ? pending['userHash'] : null;
   return {
     'installId': installId,
     'userId': userId,
+    'userHash': ?(userHash ?? oldHash),
     'email': ?(email ?? oldEmail),
     'phone': ?(phone ?? oldPhone),
     if (mergedTraits.isNotEmpty) 'traits': mergedTraits,

@@ -236,4 +236,29 @@ void main() {
     await client.forget();
     expect(await store.read('ft_engage.identify'), isNull);
   });
+
+  test(
+    'a signed identity carries the hash your server made, and a bad hash is rejected',
+    () async {
+      final hash = 'ab' * 32;
+      final transport = ScriptedTransport()..script.add(500);
+      final client = await makeClient(transport: transport);
+      await client.identify('user_1', userHash: hash);
+      await client.identify('user_1', traits: {'plan': 'free'});
+      expect(transport.to('/v1/identify').last.json['userHash'], hash);
+      await client.identify('user_1', userHash: 'cd' * 32);
+      expect(transport.to('/v1/identify').last.json['userHash'], 'cd' * 32);
+      await client.identify('user_2');
+      expect(
+        transport.to('/v1/identify').last.json.containsKey('userHash'),
+        false,
+      );
+      for (final bad in ['abc', 'AB' * 32, 'zz' * 32, '${'ab' * 32}0']) {
+        await expectLater(
+          client.identify('user_1', userHash: bad),
+          throwsA(isA<InvalidIdentityException>()),
+        );
+      }
+    },
+  );
 }
