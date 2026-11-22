@@ -8,7 +8,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  ft_engage_flutter: ^0.8.0
+  ft_engage_flutter: ^0.9.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

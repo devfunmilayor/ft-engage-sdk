@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.0
+
+- `FtEngage.init(appId: ...)` names the app (a bundle id or package name is a good choice). Requires `ft_engage_core` 0.9.0.
+
 ## 0.8.0
 
 - `PushChanges` and `PushPermission` are optional extras for a `PushSource`. A source that implements `PushChanges` makes the plugin register again when the token or permission changes, and `FtEngage.requestPushPermission()` asks through a source that implements `PushPermission`.
