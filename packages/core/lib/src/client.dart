@@ -215,6 +215,7 @@ class EngageClient {
     String name, {
     Map<String, Object?> props = const {},
     String? screen,
+    DateTime? at,
   }) async {
     validateEventName(name);
     validateProps(props);
@@ -225,7 +226,7 @@ class EngageClient {
       'installId': _installId,
       'userId': ?_userId,
       'screen': ?screen,
-      'at': _clock.now().toUtc().toIso8601String(),
+      'at': (at ?? _clock.now()).toUtc().toIso8601String(),
       if (props.isNotEmpty) 'props': Map<String, Object?>.from(props),
     });
     if (_queue.length >= config.batchSize) {

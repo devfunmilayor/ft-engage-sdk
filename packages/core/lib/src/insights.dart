@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
 
 import 'clock.dart';
+import 'storage.dart';
 
 class InsightsConfig {
   const InsightsConfig({
@@ -14,6 +16,8 @@ class InsightsConfig {
     this.rageWindow = const Duration(seconds: 1),
     this.rageRadius = 48,
     this.sessionGap = const Duration(minutes: 30),
+    this.normalizeScreens = true,
+    this.screenName,
   }) : assert(sampleRate >= 0 && sampleRate <= 1, 'sampleRate is 0 to 1'),
        assert(rageTaps >= 2, 'a rage burst is at least 2 taps');
 
@@ -26,6 +30,8 @@ class InsightsConfig {
   final Duration rageWindow;
   final double rageRadius;
   final Duration sessionGap;
+  final bool normalizeScreens;
+  final String Function(String)? screenName;
 }
 
 class TapSample {
@@ -51,7 +57,43 @@ typedef InsightTrack =
       String name, {
       Map<String, Object?> props,
       String? screen,
+      DateTime? at,
     });
+
+final _digits = RegExp(r'^\d+$');
+final _uuid = RegExp(
+  r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+);
+final _hex = RegExp(r'^[0-9a-fA-F]{12,}$');
+final _token = RegExp(r'^[A-Za-z0-9_-]{16,}$');
+
+bool looksLikeId(String segment) {
+  if (_digits.hasMatch(segment) ||
+      _uuid.hasMatch(segment) ||
+      _hex.hasMatch(segment)) {
+    return true;
+  }
+  return _token.hasMatch(segment) &&
+      segment.contains(RegExp(r'\d')) &&
+      segment.contains(RegExp(r'[A-Za-z]'));
+}
+
+String normalizeScreenName(String name) {
+  var path = name.trim();
+  for (final cut in ['?', '#']) {
+    final at = path.indexOf(cut);
+    if (at >= 0) path = path.substring(0, at);
+  }
+  if (path.length > 1 && path.endsWith('/')) {
+    path = path.substring(0, path.length - 1);
+  }
+  return path
+      .split('/')
+      .map((s) => s.isNotEmpty && looksLikeId(s) ? ':id' : s)
+      .join('/');
+}
+
+const _pendingKey = 'ft_engage.insights.pending';
 
 class _Tap {
   const _Tap(this.at, this.x, this.y);
@@ -67,7 +109,9 @@ class InsightsRecorder {
     required InsightTrack track,
     Clock clock = const SystemClock(),
     Random? random,
+    EngageStorage? storage,
   }) : _track = track,
+       _storage = storage,
        _clock = clock,
        _random = random ?? Random.secure();
 
@@ -75,12 +119,16 @@ class InsightsRecorder {
   final InsightTrack _track;
   final Clock _clock;
   final Random _random;
+  final EngageStorage? _storage;
   String? _sid;
   bool _sampled = true;
   DateTime? _lastActivity;
   String? _screen;
   int _tapsOnScreen = 0;
   double? _maxScroll;
+  double? _persistedScroll;
+  double? _scrollOffset;
+  double? _contentHeight;
   final List<_Tap> _recent = [];
   bool _rageActive = false;
 
@@ -102,20 +150,38 @@ class InsightsRecorder {
     return _sampled;
   }
 
-  void _emit(String name, Map<String, Object?> props) {
+  void _emit(
+    String name,
+    Map<String, Object?> props, {
+    String? screen,
+    DateTime? at,
+  }) {
     unawaited(
-      _track(name, props: props, screen: _screen).catchError((Object _) {}),
+      _track(
+        name,
+        props: props,
+        screen: screen ?? _screen,
+        at: at,
+      ).catchError((Object _) {}),
     );
   }
 
   void screenViewed(String name) {
-    final clean = name.trim();
+    final custom = config.screenName;
+    final named = custom != null
+        ? custom(name)
+        : config.normalizeScreens
+        ? normalizeScreenName(name)
+        : name;
+    final clean = named.trim();
     if (clean.isEmpty || clean.length > 128 || clean == _screen) return;
     leaveScreen();
     final sampled = _active();
     final previous = _screen;
     _screen = clean;
     _tapsOnScreen = 0;
+    _scrollOffset = null;
+    _contentHeight = null;
     _recent.clear();
     _rageActive = false;
     if (config.screens && sampled) {
@@ -137,6 +203,8 @@ class InsightsRecorder {
       'vw': sample.viewportWidth.round(),
       'vh': sample.viewportHeight.round(),
       'sid': _sid,
+      if (_contentHeight != null) 'so': (_scrollOffset ?? 0).round(),
+      if (_contentHeight != null) 'ch': _contentHeight!.round(),
       if (sample.dead) 'dead': true,
       'target': ?sample.target,
     };
@@ -164,22 +232,97 @@ class InsightsRecorder {
         'vw': props['vw'],
         'vh': props['vh'],
         'sid': props['sid'],
+        'so': ?props['so'],
+        'ch': ?props['ch'],
         'taps': cluster,
         'target': ?props['target'],
       });
     }
   }
 
-  void scroll(double fraction) {
+  void metrics({required double offset, required double contentHeight}) {
+    if (_screen == null ||
+        !offset.isFinite ||
+        !contentHeight.isFinite ||
+        contentHeight <= 0) {
+      return;
+    }
+    _scrollOffset = offset < 0 ? 0 : offset;
+    _contentHeight = contentHeight;
+  }
+
+  void scroll(double fraction, {double? offset, double? contentHeight}) {
+    if (offset != null && contentHeight != null) {
+      metrics(offset: offset, contentHeight: contentHeight);
+    }
     if (!config.scroll || _screen == null || !fraction.isFinite) return;
     if (!_active()) return;
     final value = fraction.clamp(0.0, 1.0);
-    if (_maxScroll == null || value > _maxScroll!) _maxScroll = value;
+    if (_maxScroll == null || value > _maxScroll!) {
+      _maxScroll = value;
+      _persist(value);
+    }
+  }
+
+  void _persist(double value) {
+    final store = _storage;
+    final last = _persistedScroll;
+    if (store == null || (last != null && value - last < 0.1 && value < 1)) {
+      return;
+    }
+    _persistedScroll = value;
+    unawaited(
+      store
+          .write(
+            _pendingKey,
+            jsonEncode({
+              'screen': _screen,
+              'sid': _sid,
+              'depth': (value * 100).round(),
+              'at': _clock.now().toUtc().toIso8601String(),
+            }),
+          )
+          .catchError((Object _) {}),
+    );
+  }
+
+  Future<void> recover() async {
+    final store = _storage;
+    if (store == null || !config.scroll) return;
+    try {
+      final raw = await store.read(_pendingKey);
+      if (raw == null) return;
+      await store.delete(_pendingKey);
+      final saved = jsonDecode(raw) as Map<String, dynamic>;
+      final screen = saved['screen'];
+      final depth = saved['depth'];
+      final at = DateTime.tryParse('${saved['at']}');
+      if (screen is! String ||
+          depth is! int ||
+          depth < 0 ||
+          depth > 100 ||
+          at == null) {
+        return;
+      }
+      _emit(
+        'ui.scroll_depth',
+        {'sid': saved['sid'], 'depth': depth, 'recovered': true},
+        screen: screen,
+        at: at,
+      );
+    } on Object {
+      await store.delete(_pendingKey).catchError((Object _) {});
+    }
   }
 
   void leaveScreen() {
     final depth = _maxScroll;
     _maxScroll = null;
+    _persistedScroll = null;
+    final store = _storage;
+    if (store != null && depth != null) {
+      unawaited(store.delete(_pendingKey).catchError((Object _) {}));
+    }
     if (depth == null || !config.scroll || !_sampled || _screen == null) return;
     _emit('ui.scroll_depth', {'sid': _sid, 'depth': (depth * 100).round()});
   }

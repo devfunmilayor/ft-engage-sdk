@@ -61,7 +61,8 @@ Future<void> main() async {
     config: const InsightsConfig(),
     track: client.track,
   );
-  insights.screenViewed('home');
+  insights.screenViewed('/order/8841');
+  insights.metrics(offset: 640, contentHeight: 3200);
   for (var i = 0; i < 3; i++) {
     insights.tap(
       const TapSample(
@@ -74,7 +75,7 @@ Future<void> main() async {
       ),
     );
   }
-  insights.scroll(0.62);
+  insights.scroll(0.62, offset: 1200, contentHeight: 3200);
   insights.screenViewed('signup');
   insights.leaveScreen();
   await Future<void>.delayed(Duration.zero);

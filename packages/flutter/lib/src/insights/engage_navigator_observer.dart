@@ -14,6 +14,7 @@ class EngageNavigatorObserver extends NavigatorObserver {
   final String? Function(Route<dynamic>) _nameOf;
 
   void _show(Route<dynamic>? route) {
+    engage.navigationEpoch += 1;
     if (route == null || route is PopupRoute) return;
     final name = _nameOf(route);
     if (name != null) engage.screen(name);
