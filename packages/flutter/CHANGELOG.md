@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.10.0
 
-- `FtEngage.logout()` unlinks the install on the server (needs the next `ft_engage_core`).
+- `FtEngage.logout()` unlinks the install on the server (requires `ft_engage_core` 0.10.0).
 
 ## 0.9.0
 

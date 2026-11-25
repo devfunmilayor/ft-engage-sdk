@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.10.0
 
 - `logout()` now also tells the server to unlink this install from the person (`POST /v1/logout` with the install id), so a shared device stops receiving the previous person's messages. A request that could not be sent is kept, retried, and always goes before the next identify.
 

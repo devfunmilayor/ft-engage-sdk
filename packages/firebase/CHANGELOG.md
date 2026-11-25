@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.0
+
+- Requires `ft_engage_flutter` 0.10.0. No other change.
+
 ## 0.9.0
 
 - Follows `ft_engage_flutter` 0.9.0. No change of its own.

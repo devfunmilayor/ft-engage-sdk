@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.5.0
 
 - Added the `unlink` schema: the body of `POST /v1/logout`, just an install id.
 
