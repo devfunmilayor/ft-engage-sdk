@@ -60,6 +60,7 @@ class EngageClient {
     this._consent,
     this._pendingRegister,
     this._pendingIdentify,
+    this._pendingLogout,
   );
 
   static const _installKey = 'ft_engage.install_id';
@@ -67,6 +68,7 @@ class EngageClient {
   static const _consentKey = 'ft_engage.consent';
   static const _registerKey = 'ft_engage.register';
   static const _identifyKey = 'ft_engage.identify';
+  static const _logoutKey = 'ft_engage.logout';
   static const _baseBackoff = Duration(seconds: 5);
   static const _maxBackoff = Duration(minutes: 5);
 
@@ -81,6 +83,7 @@ class EngageClient {
   ConsentState _consent;
   Map<String, Object?>? _pendingRegister;
   Map<String, Object?>? _pendingIdentify;
+  bool _pendingLogout;
   int _failures = 0;
   DateTime? _retryAt;
   Future<FlushResult>? _flushing;
@@ -126,6 +129,7 @@ class EngageClient {
       rawIdentify == null
           ? null
           : Map<String, Object?>.from(jsonDecode(rawIdentify) as Map),
+      await kv.read(_logoutKey) != null,
     );
     final interval = config.flushInterval;
     if (interval != null) {
@@ -151,8 +155,10 @@ class EngageClient {
       await _queue.clear();
       _pendingRegister = null;
       _pendingIdentify = null;
+      _pendingLogout = false;
       await _store.delete(_registerKey);
       await _store.delete(_identifyKey);
+      await _store.delete(_logoutKey);
     }
   }
 
@@ -189,10 +195,15 @@ class EngageClient {
   }
 
   Future<void> logout() async {
+    final hadUser = _userId != null || _pendingIdentify != null;
     _userId = null;
     _pendingIdentify = null;
     await _store.delete(_userKey);
     await _store.delete(_identifyKey);
+    if (!hadUser || !canCollect) return;
+    _pendingLogout = true;
+    await _store.write(_logoutKey, '1');
+    await flush(force: true);
   }
 
   Future<void> register(RegisterInfo info) async {
@@ -282,11 +293,13 @@ class EngageClient {
       _consentKey,
       _registerKey,
       _identifyKey,
+      _logoutKey,
     ]) {
       await _store.delete(key);
     }
     _pendingRegister = null;
     _pendingIdentify = null;
+    _pendingLogout = false;
     _userId = null;
     _consent = ConsentState.unknown;
     _installId = _ids.install();
@@ -341,6 +354,26 @@ class EngageClient {
         if (status == 200 || status == 400) {
           _pendingRegister = null;
           await _store.delete(_registerKey);
+        } else {
+          _fail();
+          return _result(0, 0, status);
+        }
+      } on TransportException {
+        _fail();
+        return _result(0, 0, null);
+      }
+    }
+    if (_pendingLogout) {
+      try {
+        final response = await _transport.post(
+          _url('/v1/logout'),
+          _headers,
+          jsonEncode({'installId': _installId}),
+        );
+        status = response.status;
+        if (status == 200 || status == 400 || status == 404) {
+          _pendingLogout = false;
+          await _store.delete(_logoutKey);
         } else {
           _fail();
           return _result(0, 0, status);

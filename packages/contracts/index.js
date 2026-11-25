@@ -26,4 +26,5 @@ export const validateRegister = compile('register');
 export const validateBatch = compile('batch');
 export const validateIdentify = compile('identify');
 export const validateReplay = compile('replay');
+export const validateUnlink = compile('unlink');
 export const MAX_BATCH_SIZE = 50;

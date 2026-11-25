@@ -6,7 +6,7 @@
 |---|---|
 | `FtEngage.init({publicKey, endpoint, requireConsent, appVersion, appId, pushSource, transport, storage, flushInterval, observeLifecycle, insights, replay})` | Create the client. `publicKey` and `endpoint` are required, and there is no default endpoint. |
 | `identify(userId, {userHash, email, phone, traits, marketingConsent})` | Link this install to a person and tag later events with the user id. Sends `/v1/identify` after registration. Throws `InvalidIdentityException` for a bad value. See below. |
-| `logout()` | Stop tagging events with the user id and drop any identity still waiting to be sent. Keeps the install id and consent. |
+| `logout()` | Stop tagging events with the user id, drop any identity still waiting to be sent, and ask the server to unlink this install from the person (`POST /v1/logout`). If the device is offline the request is kept and retried before the next identify. Keeps the install id and consent. |
 | `track(name, {props, screen})` | Queue an event. Throws `InvalidEventException` for a bad name or property. |
 | `setConsent(state)` | `granted`, `denied` or `unknown`. |
 | `flush()` | Send queued events now. Returns a `FlushResult`. |
@@ -32,7 +32,7 @@ Same methods, plus `register(RegisterInfo)`, `installId`, `userId`, `consent`, `
 - Several calls for the same user before delivery are merged into one request. A different user replaces anything still waiting.
 - With `requireConsent: true` and no `granted` consent, `identify` sends and stores nothing but the user id. Call it again after consent.
 - Delivery follows the same rules as events: registration first, then identity, then events. 400 drops the request. 404 (the server has not seen the install yet), 429, 5xx and network errors keep it and retry with backoff.
-- `logout()` does not unlink the install on the server. Until another person identifies on the same install, the server still associates the device with the previous person.
+- Unlinking needs a server that has `POST /v1/logout`. An older server answers `404` and the SDK treats that as done, so on it the install stays linked to the previous person until someone else identifies.
 
 ## Signed identity
 
