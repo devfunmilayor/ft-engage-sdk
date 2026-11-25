@@ -32,6 +32,10 @@ export interface BatchPayload {
 export type TraitValue = string | number | boolean | null;
 export type ConsentChannel = 'email' | 'whatsapp' | 'sms';
 
+export interface UnlinkPayload {
+  installId: string;
+}
+
 export interface IdentifyPayload {
   installId: string;
   userId: string;
@@ -46,6 +50,7 @@ export const validateEvent: (value: unknown) => ValidationResult;
 export const validateRegister: (value: unknown) => ValidationResult;
 export const validateBatch: (value: unknown) => ValidationResult;
 export const validateIdentify: (value: unknown) => ValidationResult;
+export const validateUnlink: (value: unknown) => ValidationResult;
 export const MAX_BATCH_SIZE: number;
 
 export type ReplayNodeKind = 't' | 'i' | 'b' | 'f' | 'x' | 'm';

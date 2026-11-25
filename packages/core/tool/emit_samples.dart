@@ -80,6 +80,7 @@ Future<void> main() async {
   insights.leaveScreen();
   await Future<void>.delayed(Duration.zero);
   await client.flush(force: true);
+  await client.logout();
   final replay = ReplayBuffer(
     config: const ReplayConfig(),
     installId: () => client.installId,
@@ -115,6 +116,7 @@ Future<void> main() async {
     final kind = switch (path) {
       '/v1/register' => 'register',
       '/v1/identify' => 'identify',
+      '/v1/logout' => 'unlink',
       _ => 'batch',
     };
     print(jsonEncode({'kind': kind, 'payload': jsonDecode(body)}));

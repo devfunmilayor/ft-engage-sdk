@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Added the `unlink` schema: the body of `POST /v1/logout`, just an install id.
+
 ## 0.4.0
 
 - Added the `replay` schema: a chunk of a wireframe session recording (screens, layout snapshots made of boxes, taps, scroll positions and app state marks). Nodes are a kind and a rectangle, never text.

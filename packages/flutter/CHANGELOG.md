@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `FtEngage.logout()` unlinks the install on the server (needs the next `ft_engage_core`).
+
 ## 0.9.0
 
 - `FtEngage.init(appId: ...)` names the app (a bundle id or package name is a good choice). Requires `ft_engage_core` 0.9.0.

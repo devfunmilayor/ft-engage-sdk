@@ -7,6 +7,7 @@ import {
   validateBatch,
   validateIdentify,
   validateReplay,
+  validateUnlink,
   MAX_BATCH_SIZE,
 } from '../index.js';
 
@@ -23,6 +24,7 @@ const validatorFor = (file) => {
   if (file.startsWith('register_')) return validateRegister;
   if (file.startsWith('identify_')) return validateIdentify;
   if (file.startsWith('replay_')) return validateReplay;
+  if (file.startsWith('unlink_')) return validateUnlink;
   return validateBatch;
 };
 

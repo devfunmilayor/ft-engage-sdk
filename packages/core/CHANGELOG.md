@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `logout()` now also tells the server to unlink this install from the person (`POST /v1/logout` with the install id), so a shared device stops receiving the previous person's messages. A request that could not be sent is kept, retried, and always goes before the next identify.
+
 ## 0.9.0
 
 - `EngageConfig.appId` is sent as the `x-engage-app` header on every request, so a project can limit a key to named apps. It is a label, not proof of identity: anyone can copy it, so pair it with an origin list for browsers and a daily quota.

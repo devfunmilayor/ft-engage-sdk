@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ft-engage.example/schemas/unlink.schema.json",
+  "title": "Unlink an install from its person",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "installId"
+  ],
+  "properties": {
+    "installId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{8,64}$"
+    }
+  }
+}
