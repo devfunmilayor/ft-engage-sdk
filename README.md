@@ -12,21 +12,19 @@ Track installs, sessions and funnel steps from a Flutter app, and register the d
 ## Status
 
 Version 0.10.0. Logout unlinks the install on the server. App id header for per-key app limits. Firebase push source (`ft_engage_firebase`) with token refresh and a permission request. Opt-in session replay (wireframes, never text or pixels). Opt-in behaviour insights (screens, taps, rage and dead taps, scroll depth). Signed identity (`userHash`). Works today: identify (user id, email, phone, traits and marketing consent), logout, track, register, offline queue, retry, consent, `forget()`, lifecycle events, and encrypted on-device storage (Hive CE).
-Not built yet: native push token and permission reading (you supply a `PushSource`), Android install referrer, Apple Search Ads token, deep links. Nothing is published to pub.dev.
+Not built yet: native push token and permission reading (you supply a `PushSource`), Android install referrer, Apple Search Ads token, deep links. The packages are on pub.dev as `ft_engage_core`, `ft_engage_flutter` and `ft_engage_firebase`.
 
 ## Integrate in about ten minutes
 
 1. Get a **public** key (`pk_test_...` for sandbox, `pk_live_...` for production) and your endpoint URL from your FT.Engage project. Never put a secret key (`sk_...`) in an app. The SDK refuses to start with one.
-2. Add the package. Until it is on pub.dev, use git:
+2. Add the package from pub.dev:
 
 ```yaml
 dependencies:
-  ft_engage_flutter:
-    git:
-      url: https://github.com/devfunmilayor/ft-engage-sdk.git
-      path: packages/flutter
-      ref: v0.10.0
+  ft_engage_flutter: ^0.10.0
 ```
+
+   For push through Firebase, also add `ft_engage_firebase: ^0.10.0`. To pin to a tagged release from GitHub instead, use a `git:` dependency with `url: https://github.com/devfunmilayor/ft-engage-sdk.git`, `path: packages/flutter` and `ref: v0.10.0`.
 
 3. Initialise once at startup:
 
