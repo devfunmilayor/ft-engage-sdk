@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ft-engage.example/schemas/attribution_install.schema.json",
+  "title": "Attribute an install",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "installId"
+  ],
+  "properties": {
+    "installId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{8,64}$"
+    },
+    "referrer": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1000
+    },
+    "appleToken": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    }
+  },
+  "anyOf": [
+    {
+      "required": [
+        "referrer"
+      ],
+      "properties": {
+        "referrer": true
+      }
+    },
+    {
+      "required": [
+        "appleToken"
+      ],
+      "properties": {
+        "appleToken": true
+      }
+    }
+  ]
+}

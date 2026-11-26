@@ -1,5 +1,6 @@
 library;
 
+export 'src/attribution.dart';
 export 'src/client.dart';
 export 'src/clock.dart';
 export 'src/config.dart';

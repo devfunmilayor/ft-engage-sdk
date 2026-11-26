@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
+import 'attribution.dart';
 import 'clock.dart';
 import 'config.dart';
 import 'consent.dart';
@@ -69,6 +70,7 @@ class EngageClient {
   static const _registerKey = 'ft_engage.register';
   static const _identifyKey = 'ft_engage.identify';
   static const _logoutKey = 'ft_engage.logout';
+  static const _attributionKey = 'ft_engage.attribution';
   static const _baseBackoff = Duration(seconds: 5);
   static const _maxBackoff = Duration(minutes: 5);
 
@@ -206,6 +208,63 @@ class EngageClient {
     await flush(force: true);
   }
 
+  Future<AttributionResult?> reportAttribution({
+    String? referrer,
+    String? appleToken,
+  }) async {
+    final hasReferrer = (referrer ?? '').isNotEmpty;
+    final hasToken = (appleToken ?? '').isNotEmpty;
+    if (!canCollect || (!hasReferrer && !hasToken)) {
+      return null;
+    }
+    final cached = await _store.read(_attributionKey);
+    if (cached != null) {
+      return AttributionResult.fromJson(
+        jsonDecode(cached) as Map<String, dynamic>,
+      );
+    }
+    await flush(force: true);
+    try {
+      final response = await _transport.post(
+        _url('/v1/attribution/install'),
+        _headers,
+        jsonEncode({
+          'installId': _installId,
+          if (hasReferrer) 'referrer': referrer,
+          if (hasToken) 'appleToken': appleToken,
+        }),
+      );
+      if (response.status == 404) {
+        return const AttributionResult(attributed: false, retry: true);
+      }
+      if (response.status != 200) {
+        return null;
+      }
+      final result = AttributionResult.fromJson(
+        jsonDecode(response.body) as Map<String, dynamic>,
+      );
+      if (result.attributed) {
+        await _store.write(_attributionKey, jsonEncode(result.toJson()));
+      }
+      return result;
+    } on TransportException {
+      return null;
+    }
+  }
+
+  Future<void> trackLinkOpened(Uri link) {
+    final query = link.queryParameters;
+    return track(
+      'link.opened',
+      props: {
+        'host': link.host,
+        'utm_source': ?query['utm_source'],
+        'utm_medium': ?query['utm_medium'],
+        'utm_campaign': ?query['utm_campaign'],
+      },
+    );
+  }
+
   Future<void> register(RegisterInfo info) async {
     if (!canCollect) return;
     final granted = info.pushStatus == 'granted';
@@ -294,6 +353,7 @@ class EngageClient {
       _registerKey,
       _identifyKey,
       _logoutKey,
+      _attributionKey,
     ]) {
       await _store.delete(key);
     }

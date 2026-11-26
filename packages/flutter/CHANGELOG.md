@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `FtEngage.reportAttribution` and `FtEngage.trackLinkOpened` (need the next `ft_engage_core`).
+
 ## 0.10.0
 
 - `FtEngage.logout()` unlinks the install on the server (requires `ft_engage_core` 0.10.0).
