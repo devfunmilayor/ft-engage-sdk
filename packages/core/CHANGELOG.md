@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.11.0
 
 - `reportAttribution({referrer, appleToken})` reports the install referrer or an Apple Search Ads token to the attribution route and returns an `AttributionResult`, remembered on the device once attributed. `trackLinkOpened(Uri)` tracks a `link.opened` event with only the host and utm tags.
 

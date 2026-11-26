@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.11.0
 
-- `FtEngage.reportAttribution` and `FtEngage.trackLinkOpened` (need the next `ft_engage_core`).
+- `FtEngage.reportAttribution` and `FtEngage.trackLinkOpened` (require `ft_engage_core` 0.11.0).
 
 ## 0.10.0
 

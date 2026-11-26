@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.6.0
 
 - Added the `attribution_install` schema: the body of `POST /v1/attribution/install` (an install id plus a referrer or an Apple token).
 
