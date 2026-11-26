@@ -27,4 +27,5 @@ export const validateBatch = compile('batch');
 export const validateIdentify = compile('identify');
 export const validateReplay = compile('replay');
 export const validateUnlink = compile('unlink');
+export const validateAttributionInstall = compile('attribution_install');
 export const MAX_BATCH_SIZE = 50;

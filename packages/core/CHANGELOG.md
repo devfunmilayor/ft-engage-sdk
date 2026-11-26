@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `reportAttribution({referrer, appleToken})` reports the install referrer or an Apple Search Ads token to the attribution route and returns an `AttributionResult`, remembered on the device once attributed. `trackLinkOpened(Uri)` tracks a `link.opened` event with only the host and utm tags.
+
 ## 0.10.0
 
 - `logout()` now also tells the server to unlink this install from the person (`POST /v1/logout` with the install id), so a shared device stops receiving the previous person's messages. A request that could not be sent is kept, retried, and always goes before the next identify.

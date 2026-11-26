@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { validateBatch, validateEvent, validateIdentify, validateRegister, validateReplay, validateUnlink } from '@ft-engage/contracts';
+import { validateBatch, validateEvent, validateIdentify, validateRegister, validateReplay, validateUnlink, validateAttributionInstall } from '@ft-engage/contracts';
 
 const output = execFileSync('dart', ['run', 'tool/emit_samples.dart'], {
   cwd: new URL('../../core/', import.meta.url),
@@ -14,6 +14,7 @@ for (const line of output.split('\n').filter(Boolean)) {
   else if (kind === 'identify') results.push(validateIdentify(payload));
   else if (kind === 'replay') results.push(validateReplay(payload));
   else if (kind === 'unlink') results.push(validateUnlink(payload));
+  else if (kind === 'attribution') results.push(validateAttributionInstall(payload));
   else {
     results.push(validateBatch(payload));
     for (const event of payload.events) results.push(validateEvent(event));

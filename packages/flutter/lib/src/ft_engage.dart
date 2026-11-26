@@ -144,6 +144,13 @@ class FtEngage with WidgetsBindingObserver {
 
   Future<void> logout() => client.logout();
 
+  Future<AttributionResult?> reportAttribution({
+    String? referrer,
+    String? appleToken,
+  }) => client.reportAttribution(referrer: referrer, appleToken: appleToken);
+
+  Future<void> trackLinkOpened(Uri link) => client.trackLinkOpened(link);
+
   Future<void> setConsent(ConsentState state) async {
     await client.setConsent(state);
     if (state == ConsentState.denied) replay?.buffer.clear();

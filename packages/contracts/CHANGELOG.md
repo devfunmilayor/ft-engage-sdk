@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Added the `attribution_install` schema: the body of `POST /v1/attribution/install` (an install id plus a referrer or an Apple token).
+
 ## 0.5.0
 
 - Added the `unlink` schema: the body of `POST /v1/logout`, just an install id.

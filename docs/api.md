@@ -63,3 +63,14 @@ Calls made with a secret key from your server need no hash.
 
 - `EngageConfigException`: bad key, secret key, or non-https endpoint (http is allowed only for localhost).
 - `InvalidEventException`: invalid event name or property, including financial-looking keys.
+
+## Attribution
+
+Tracking links made in the FT.Engage console send people to the store and, on Google Play, put a click id in the install referrer. After install, the app reads the referrer and reports it, and the server attributes the install to the link.
+
+| Call | What it does |
+|---|---|
+| `reportAttribution({referrer, appleToken})` | Reports where the install came from. Pass the Google Play install referrer string on Android, or the Apple Search Ads token on iOS (Apple's AdServices `AAAttribution.attributionToken()`). Returns an `AttributionResult` (`attributed`, `source`, `medium`, `campaign`, `method`, `deepLink`, `retry`) or `null` if nothing was sent (no consent, nothing to report, or the network failed, so call it again later). `retry: true` means the server or Apple has no answer yet. An attributed answer is remembered on the device and later calls return it without a request. |
+| `trackLinkOpened(Uri)` | Tracks a `link.opened` event with the host and any `utm_source`, `utm_medium` and `utm_campaign` of a link that opened the app. Nothing else from the link is sent. |
+
+Reading the referrer or the Apple token needs native code that this SDK does not include yet: use Google's Install Referrer API on Android and Apple's AdServices framework on iOS (through a plugin you already use or a small platform channel) and pass the result in. Attribution is exact for Google Play links and Apple Search Ads. A link opened on an iPhone and installed from the App Store cannot be tied back to the click.

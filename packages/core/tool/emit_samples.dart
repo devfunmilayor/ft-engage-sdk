@@ -80,6 +80,9 @@ Future<void> main() async {
   insights.leaveScreen();
   await Future<void>.delayed(Duration.zero);
   await client.flush(force: true);
+  await client.reportAttribution(
+    referrer: 'ftclick=3f2b8c1e-1111-4222-8333-444455556666&utm_source=meta',
+  );
   await client.logout();
   final replay = ReplayBuffer(
     config: const ReplayConfig(),
@@ -117,6 +120,7 @@ Future<void> main() async {
       '/v1/register' => 'register',
       '/v1/identify' => 'identify',
       '/v1/logout' => 'unlink',
+      '/v1/attribution/install' => 'attribution',
       _ => 'batch',
     };
     print(jsonEncode({'kind': kind, 'payload': jsonDecode(body)}));
