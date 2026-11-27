@@ -167,6 +167,7 @@ class EngageClient {
   Future<void> identify(
     String userId, {
     String? userHash,
+    DateTime? userHashExpiresAt,
     String? email,
     String? phone,
     Map<String, Object?> traits = const {},
@@ -175,6 +176,7 @@ class EngageClient {
     validateIdentity(
       userId: userId,
       userHash: userHash,
+      userHashExpiresAt: userHashExpiresAt,
       email: email,
       phone: phone,
       traits: traits,
@@ -186,6 +188,7 @@ class EngageClient {
       installId: _installId,
       userId: userId,
       userHash: userHash,
+      userHashExpiresAt: userHashExpiresAt,
       email: email,
       phone: phone,
       traits: traits,

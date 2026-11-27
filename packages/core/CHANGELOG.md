@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.12.0
+
+- `identify` takes `userHashExpiresAt`, the deadline your server signed into the identity hash. It is sent as `userHashExpiresAt` (whole seconds since 1970) together with `userHash`, and the pair is kept together when an identify is merged with an earlier one that has not been sent yet. Giving a deadline without a hash, or a date before 1970 or after 2100, throws `InvalidIdentityException`. Nothing changes for apps that do not use it.
+
 ## 0.11.0
 
 - `reportAttribution({referrer, appleToken})` reports the install referrer or an Apple Search Ads token to the attribution route and returns an `AttributionResult`, remembered on the device once attributed. `trackLinkOpened(Uri)` tracks a `link.opened` event with only the host and utm tags.

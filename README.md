@@ -11,7 +11,7 @@ Track installs, sessions and funnel steps from a Flutter app, and register the d
 
 ## Status
 
-Version 0.11.0. Install attribution (`reportAttribution`) and link tracking (`trackLinkOpened`). Logout unlinks the install on the server. App id header for per-key app limits. Firebase push source (`ft_engage_firebase`) with token refresh and a permission request. Opt-in session replay (wireframes, never text or pixels). Opt-in behaviour insights (screens, taps, rage and dead taps, scroll depth). Signed identity (`userHash`). Works today: identify (user id, email, phone, traits and marketing consent), logout, track, register, offline queue, retry, consent, `forget()`, lifecycle events, and encrypted on-device storage (Hive CE).
+Version 0.12.0. Signed identity can now expire (`userHashExpiresAt`). Install attribution (`reportAttribution`) and link tracking (`trackLinkOpened`). Logout unlinks the install on the server. App id header for per-key app limits. Firebase push source (`ft_engage_firebase`) with token refresh and a permission request. Opt-in session replay (wireframes, never text or pixels). Opt-in behaviour insights (screens, taps, rage and dead taps, scroll depth). Signed identity (`userHash`). Works today: identify (user id, email, phone, traits and marketing consent), logout, track, register, offline queue, retry, consent, `forget()`, lifecycle events, and encrypted on-device storage (Hive CE).
 Not built yet: native push token and permission reading (you supply a `PushSource`), Android install referrer, Apple Search Ads token, deep links. The packages are on pub.dev as `ft_engage_core`, `ft_engage_flutter` and `ft_engage_firebase`.
 
 ## Integrate in about ten minutes
@@ -21,10 +21,10 @@ Not built yet: native push token and permission reading (you supply a `PushSourc
 
 ```yaml
 dependencies:
-  ft_engage_flutter: ^0.11.0
+  ft_engage_flutter: ^0.12.0
 ```
 
-   For push through Firebase, also add `ft_engage_firebase: ^0.11.0`. To pin to a tagged release from GitHub instead, use a `git:` dependency with `url: https://github.com/devfunmilayor/ft-engage-sdk.git`, `path: packages/flutter` and `ref: v0.11.0`.
+   For push through Firebase, also add `ft_engage_firebase: ^0.12.0`. To pin to a tagged release from GitHub instead, use a `git:` dependency with `url: https://github.com/devfunmilayor/ft-engage-sdk.git`, `path: packages/flutter` and `ref: v0.12.0`.
 
 3. Initialise once at startup:
 

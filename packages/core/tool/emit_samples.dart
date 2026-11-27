@@ -49,6 +49,7 @@ Future<void> main() async {
     'user_2',
     userHash:
         '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
+    userHashExpiresAt: DateTime.utc(2030),
     email: 'ada@example.com',
     phone: '+2348012345678',
     traits: {'plan': 'free', 'age': 31, 'verified': false, 'nickname': null},

@@ -238,6 +238,59 @@ void main() {
   });
 
   test(
+    'an expiring identity sends the deadline in seconds with the hash and keeps them together',
+    () async {
+      final hash = 'ab' * 32;
+      final until = DateTime.utc(2030, 1, 1);
+      final seconds = until.millisecondsSinceEpoch ~/ 1000;
+      final transport = ScriptedTransport()..script.add(500);
+      final client = await makeClient(transport: transport);
+      await client.identify('user_1', userHash: hash, userHashExpiresAt: until);
+      await client.identify('user_1', traits: {'plan': 'free'});
+      final kept = transport.to('/v1/identify').last.json;
+      expect([kept['userHash'], kept['userHashExpiresAt']], [hash, seconds]);
+      await client.identify('user_1', userHash: 'cd' * 32);
+      final legacy = transport.to('/v1/identify').last.json;
+      expect(legacy['userHash'], 'cd' * 32);
+      expect(legacy.containsKey('userHashExpiresAt'), false);
+      await client.identify(
+        'user_1',
+        userHash: 'ef' * 32,
+        userHashExpiresAt: until.add(const Duration(hours: 1)),
+      );
+      expect(
+        transport.to('/v1/identify').last.json['userHashExpiresAt'],
+        seconds + 3600,
+      );
+      await client.identify('user_2');
+      expect(
+        transport.to('/v1/identify').last.json.containsKey('userHashExpiresAt'),
+        false,
+      );
+      await expectLater(
+        client.identify('user_1', userHashExpiresAt: until),
+        throwsA(isA<InvalidIdentityException>()),
+      );
+      await expectLater(
+        client.identify(
+          'user_1',
+          userHash: hash,
+          userHashExpiresAt: DateTime.utc(1969),
+        ),
+        throwsA(isA<InvalidIdentityException>()),
+      );
+      await expectLater(
+        client.identify(
+          'user_1',
+          userHash: hash,
+          userHashExpiresAt: DateTime.utc(2200),
+        ),
+        throwsA(isA<InvalidIdentityException>()),
+      );
+    },
+  );
+
+  test(
     'a signed identity carries the hash your server made, and a bad hash is rejected',
     () async {
       final hash = 'ab' * 32;
