@@ -52,15 +52,16 @@ void main() {
         await engage.track('button.pressed', props: {'button': 'demo'});
         final offline = await engage.flush();
         expect(offline.sent, 0);
-        expect(offline.pending, 2);
+        expect(offline.pending, 3);
         transport.offline = false;
         final online = await engage.flush();
-        expect(online.sent, 2);
+        expect(online.sent, 3);
         await engage.flush();
       });
 
       expect(server.events.map((e) => e['name']), [
         'app.opened',
+        'session.started',
         'button.pressed',
       ]);
       expect(server.events.last['userId'], 'user_1001');

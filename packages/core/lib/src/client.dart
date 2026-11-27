@@ -11,6 +11,7 @@ import 'identity_payload.dart';
 import 'property_guard.dart';
 import 'queue.dart';
 import 'replay.dart';
+import 'session.dart';
 import 'storage.dart';
 import 'transport.dart';
 
@@ -357,6 +358,7 @@ class EngageClient {
       _identifyKey,
       _logoutKey,
       _attributionKey,
+      SessionTracker.storageKey,
     ]) {
       await _store.delete(key);
     }

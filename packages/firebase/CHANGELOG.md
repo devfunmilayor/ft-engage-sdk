@@ -2,7 +2,8 @@
 
 ## 0.13.0
 
-- Requires `ft_engage_flutter` 0.13.0. No other change.
+- `PushTracker` reports `push.received` and `push.opened` for FT.Engage notifications, so campaigns show deliveries and opens for push.
+- Requires `ft_engage_flutter` 0.13.0.
 
 ## 0.12.0
 

@@ -2,6 +2,7 @@
 
 ## 0.13.0
 
+- `SessionTracker` splits app use into sessions and reports `session.started` and `session.ended` with the session number and length. `forget()` clears it.
 - Event property names that look like secrets (pin, password, passcode, secret, token, otp, cvv, cvc, card, ssn, bvn, nin, iban, account, routing, security, credential, mnemonic, seed, passport) are refused, and so is a value that is a card number. Previously only money-like names were refused.
 - `FieldPolicy` and `FieldFacts`: the rules for deciding whether a text box may be read.
 - `ReplayConfig.captureFieldText` (off by default) and `InsightsConfig.forms` (on by default).

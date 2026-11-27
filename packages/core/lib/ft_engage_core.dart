@@ -13,6 +13,7 @@ export 'src/identity_payload.dart' show MarketingChannel;
 export 'src/insights.dart';
 export 'src/replay.dart';
 export 'src/property_guard.dart';
+export 'src/session.dart';
 export 'src/storage.dart';
 export 'src/timezone.dart';
 export 'src/transport.dart';
