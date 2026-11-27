@@ -21,3 +21,10 @@ abstract interface class Transport {
     String body,
   );
 }
+
+/// A [Transport] that can also read, which in-app messages need. The
+/// built-in [HttpTransport] is one. With a custom transport that is not,
+/// in-app messages stay off.
+abstract interface class ReadTransport {
+  Future<TransportResponse> get(Uri url, Map<String, String> headers);
+}

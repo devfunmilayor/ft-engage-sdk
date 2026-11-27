@@ -19,6 +19,7 @@ class FtEngage with WidgetsBindingObserver {
     this.replay, {
     String? timezone,
     this.sessions,
+    this.inApp,
   }) : _timezone = timezone;
 
   final EngageClient client;
@@ -33,6 +34,10 @@ class FtEngage with WidgetsBindingObserver {
   final String? _appVersion;
   final String? _timezone;
   final SessionTracker? sessions;
+
+  /// Decides when to show in-app messages. Pair it with [EngageInApp] to
+  /// draw them. `null` when `inAppMessages` is off.
+  final InAppEngine? inApp;
   PushState? _lastPush;
   StreamSubscription<void>? _pushChanges;
   bool _observing = false;
@@ -45,6 +50,7 @@ class FtEngage with WidgetsBindingObserver {
     String? appId,
     String? timezone,
     Duration? sessionTimeout = const Duration(minutes: 30),
+    bool inAppMessages = true,
     PushSource? pushSource,
     Transport? transport,
     EngageStorage? storage,
@@ -96,6 +102,14 @@ class FtEngage with WidgetsBindingObserver {
             ),
       recorder,
       timezone: timezone,
+      inApp: inAppMessages
+          ? InAppEngine(
+              store: store,
+              clock: const SystemClock(),
+              track: client.track,
+              fetch: client.fetchInApp,
+            )
+          : null,
       sessions: sessionTimeout == null
           ? null
           : SessionTracker(
@@ -114,6 +128,12 @@ class FtEngage with WidgetsBindingObserver {
       );
     }
     await instance._syncRegistration();
+    final inApp = instance.inApp;
+    if (inApp != null) {
+      await inApp.load();
+      client.onTracked = inApp.onEvent;
+      unawaited(inApp.refresh());
+    }
     await client.track('app.opened');
     await instance.sessions?.foreground();
     return instance;
@@ -189,6 +209,7 @@ class FtEngage with WidgetsBindingObserver {
     _lastPush = null;
     replay?.buffer.clear();
     await client.forget();
+    await inApp?.forget();
   }
 
   void dispose() {
@@ -197,6 +218,7 @@ class FtEngage with WidgetsBindingObserver {
     unawaited(_pushChanges?.cancel());
     _pushChanges = null;
     replay?.dispose();
+    unawaited(inApp?.dispose() ?? Future<void>.value());
     client.close();
   }
 
@@ -234,6 +256,7 @@ class FtEngage with WidgetsBindingObserver {
         replay?.mark('fg');
         client.track('app.foregrounded');
         unawaited(sessions?.foreground() ?? Future<void>.value());
+        unawaited(inApp?.refresh() ?? Future<void>.value());
         _syncRegistration();
       case AppLifecycleState.paused:
         insights?.leaveScreen();

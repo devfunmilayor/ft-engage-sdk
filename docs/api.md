@@ -4,7 +4,7 @@
 
 | Member | Purpose |
 |---|---|
-| `FtEngage.init({publicKey, endpoint, requireConsent, appVersion, appId, timezone, sessionTimeout, pushSource, transport, storage, flushInterval, observeLifecycle, insights, replay})` | Create the client. `publicKey` and `endpoint` are required, and there is no default endpoint. `timezone` is the device's IANA time zone, such as `Africa/Lagos`, for example from the `flutter_timezone` package. Without it the SDK sends `UTC` or an `Etc/GMT` zone worked out from the device's offset, and nothing for offsets that are not whole hours. Campaigns that deliver at a local hour use it. |
+| `FtEngage.init({publicKey, endpoint, requireConsent, appVersion, appId, timezone, sessionTimeout, inAppMessages, pushSource, transport, storage, flushInterval, observeLifecycle, insights, replay})` | Create the client. `publicKey` and `endpoint` are required, and there is no default endpoint. `timezone` is the device's IANA time zone, such as `Africa/Lagos`, for example from the `flutter_timezone` package. Without it the SDK sends `UTC` or an `Etc/GMT` zone worked out from the device's offset, and nothing for offsets that are not whole hours. Campaigns that deliver at a local hour use it. |
 | `identify(userId, {userHash, email, phone, traits, marketingConsent})` | Link this install to a person and tag later events with the user id. Sends `/v1/identify` after registration. Throws `InvalidIdentityException` for a bad value. See below. |
 | `logout()` | Stop tagging events with the user id, drop any identity still waiting to be sent, and ask the server to unlink this install from the person (`POST /v1/logout`). If the device is offline the request is kept and retried before the next identify. Keeps the install id and consent. |
 | `track(name, {props, screen})` | Queue an event. Throws `InvalidEventException` for a bad name or property. |
@@ -13,6 +13,7 @@
 | `screen(name)` | Record that a screen appeared, for apps without named routes. Does nothing unless insights are on. |
 | `navigatorObserver` | Add to `navigatorObservers` so named routes become screens. |
 | `forget()` | Clear identity, queue, consent and registration, and issue a new install id. |
+| `inApp` | The `InAppEngine` that decides when to show in-app messages, or `null` with `inAppMessages: false`. Draw them with `EngageInApp`. See [in-app.md](in-app.md). |
 | `dispose()` | Stop lifecycle observation and timers. |
 | `client` | The underlying `EngageClient`. |
 

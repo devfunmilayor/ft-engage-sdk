@@ -8,6 +8,7 @@ import 'config.dart';
 import 'consent.dart';
 import 'identity.dart';
 import 'identity_payload.dart';
+import 'in_app.dart';
 import 'property_guard.dart';
 import 'queue.dart';
 import 'replay.dart';
@@ -307,6 +308,29 @@ class EngageClient {
     if (_queue.length >= config.batchSize) {
       unawaited(flush(fullBatchesOnly: true));
     }
+    final listener = onTracked;
+    if (listener != null) listener(name, screen);
+  }
+
+  /// Called after each event is queued, with its name and screen. In-app
+  /// messages use it to react to what the person does.
+  void Function(String name, String? screen)? onTracked;
+
+  /// The in-app messages the server has for this install, as JSON, or
+  /// `null` when it cannot say (offline, not registered yet, or a transport
+  /// that cannot read).
+  Future<String?> fetchInApp() async {
+    final transport = _transport;
+    if (transport is! ReadTransport || !canCollect) return null;
+    try {
+      final url = _url(
+        '/v1/in-app',
+      ).replace(queryParameters: {'installId': _installId});
+      final response = await (transport as ReadTransport).get(url, _headers);
+      return response.status == 200 ? response.body : null;
+    } on TransportException {
+      return null;
+    }
   }
 
   Future<FlushResult> flush({
@@ -359,6 +383,8 @@ class EngageClient {
       _logoutKey,
       _attributionKey,
       SessionTracker.storageKey,
+      InAppEngine.messagesKey,
+      InAppEngine.historyKey,
     ]) {
       await _store.delete(key);
     }

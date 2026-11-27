@@ -2,7 +2,7 @@ import 'package:http/http.dart' as http;
 
 import 'transport.dart';
 
-class HttpTransport implements Transport {
+class HttpTransport implements Transport, ReadTransport {
   HttpTransport({
     http.Client? client,
     this.timeout = const Duration(seconds: 15),
@@ -20,6 +20,18 @@ class HttpTransport implements Transport {
     try {
       final response = await _client
           .post(url, headers: headers, body: body)
+          .timeout(timeout);
+      return TransportResponse(response.statusCode, response.body);
+    } on Exception catch (error) {
+      throw TransportException(error.runtimeType.toString());
+    }
+  }
+
+  @override
+  Future<TransportResponse> get(Uri url, Map<String, String> headers) async {
+    try {
+      final response = await _client
+          .get(url, headers: headers)
           .timeout(timeout);
       return TransportResponse(response.statusCode, response.body);
     } on Exception catch (error) {
