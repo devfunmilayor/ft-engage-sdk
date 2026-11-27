@@ -20,6 +20,7 @@ FieldFacts field(
 );
 
 void main() {
+  labelTests();
   test('plain email and name fields are readable', () {
     expect(
       FieldPolicy.readable(
@@ -145,4 +146,23 @@ void main() {
       '13+',
     ]);
   });
+}
+
+void labelTests() {
+  test(
+    'a tap label keeps control words and drops anything that looks like data',
+    () {
+      expect(FieldPolicy.label('Wallet'), 'Wallet');
+      expect(FieldPolicy.label('  Top   Up '), 'Top Up');
+      expect(FieldPolicy.label('Compare rates'), 'Compare rates');
+      expect(FieldPolicy.label('Pay £50'), isNull);
+      expect(FieldPolicy.label('Balance 12000'), isNull);
+      expect(FieldPolicy.label('ada@example.com'), isNull);
+      expect(FieldPolicy.label('Ada Lovelace'), isNull);
+      expect(FieldPolicy.label('Send Money'), 'Send Money');
+      expect(FieldPolicy.label('x' * 40), isNull);
+      expect(FieldPolicy.label(null), isNull);
+      expect(FieldPolicy.label('   '), isNull);
+    },
+  );
 }

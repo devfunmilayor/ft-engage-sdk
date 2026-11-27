@@ -78,6 +78,91 @@ class FieldPolicy {
     return masked.length > maxLength ? masked.substring(0, maxLength) : masked;
   }
 
+  static final _labelNoise = RegExp(r'\d{3,}|[£$€₦¥₹@#]|https?:|www\.');
+
+  static const _uiWords = {
+    'add',
+    'back',
+    'buy',
+    'cancel',
+    'card',
+    'change',
+    'close',
+    'compare',
+    'confirm',
+    'continue',
+    'convert',
+    'copy',
+    'create',
+    'delete',
+    'done',
+    'edit',
+    'exchange',
+    'get',
+    'help',
+    'history',
+    'home',
+    'in',
+    'learn',
+    'log',
+    'login',
+    'more',
+    'money',
+    'new',
+    'next',
+    'no',
+    'ok',
+    'open',
+    'out',
+    'pay',
+    'profile',
+    'rate',
+    'rates',
+    'receive',
+    'refresh',
+    'register',
+    'remove',
+    'request',
+    'retry',
+    'save',
+    'search',
+    'see',
+    'select',
+    'send',
+    'settings',
+    'share',
+    'show',
+    'sign',
+    'skip',
+    'start',
+    'submit',
+    'swap',
+    'top',
+    'transfer',
+    'try',
+    'up',
+    'view',
+    'wallet',
+    'yes',
+  };
+
+  static bool _looksLikeName(String text) {
+    final words = text.split(' ');
+    if (words.length < 2 || words.length > 3) return false;
+    final title = RegExp(r"^[A-Z][a-z'\-]+$");
+    if (!words.every(title.hasMatch)) return false;
+    return !words.any((w) => _uiWords.contains(w.toLowerCase()));
+  }
+
+  static String? label(String? value) {
+    if (value == null) return null;
+    final text = value.replaceAll(RegExp(r'\s+'), ' ').trim();
+    if (text.isEmpty || text.length > 32) return null;
+    if (_labelNoise.hasMatch(text)) return null;
+    if (_looksLikeName(text)) return null;
+    return text;
+  }
+
   static String? readable(FieldFacts f) => sensitive(f) ? null : scrub(f.text);
 
   static String slug(String label, {String fallback = 'field'}) {

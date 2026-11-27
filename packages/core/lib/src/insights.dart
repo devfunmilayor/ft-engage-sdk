@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'clock.dart';
+import 'field_policy.dart';
 import 'storage.dart';
 
 class InsightsConfig {
@@ -70,6 +71,8 @@ class TapSample {
     required this.viewportHeight,
     this.dead = false,
     this.target,
+    this.label,
+    this.role,
   });
 
   final double x;
@@ -78,6 +81,8 @@ class TapSample {
   final double viewportHeight;
   final bool dead;
   final String? target;
+  final String? label;
+  final String? role;
 }
 
 typedef InsightTrack =
@@ -249,6 +254,8 @@ class InsightsRecorder {
       if (_contentHeight != null) 'ch': _contentHeight!.round(),
       if (sample.dead) 'dead': true,
       'target': ?sample.target,
+      'label': ?FieldPolicy.label(sample.label),
+      'role': ?sample.role,
     };
     _emit('ui.tap', props);
     if (burst != null) {
@@ -262,6 +269,8 @@ class InsightsRecorder {
         'ch': ?props['ch'],
         'taps': burst,
         'target': ?props['target'],
+        'label': ?props['label'],
+        'role': ?props['role'],
       });
     }
   }

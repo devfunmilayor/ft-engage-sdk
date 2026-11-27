@@ -26,6 +26,10 @@ The server necessarily sees the network address of each request. The SDK does no
 
 By default nothing typed is read. Two optional things exist, both for text boxes: `form.field` events (box name, filled or empty, a length bucket and time spent, never the value) when insights are on, and, only if you set `ReplayConfig(captureFieldText: true)`, the text of boxes that pass a strict check. Password, PIN, security code, card, account, balance and amount boxes are never read. See the replay guide for the exact rules.
 
+## What a tap says
+
+Each tap event can carry a `label` and a `role`, so the platform can say "Tapped Wallet" instead of "ui.tap". The label is read from a control's own accessibility label or tooltip, or from the text inside a button. It is never read from list rows, text fields or anything inside `EngageSensitive`. A label is dropped if it is longer than 32 characters, contains three or more digits, a currency symbol, an at sign or a link, or looks like a person's name. Give a control a clear `Semantics(label: ...)` when you want a better name.
+
 ## Consent
 
 With `requireConsent: true` nothing is collected until `setConsent(ConsentState.granted)`. Denying consent clears the queue.
