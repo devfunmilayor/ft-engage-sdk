@@ -9,6 +9,7 @@ export 'src/exceptions.dart';
 export 'src/field_policy.dart';
 export 'src/http_transport.dart';
 export 'src/identity.dart';
+export 'src/in_app.dart';
 export 'src/identity_payload.dart' show MarketingChannel;
 export 'src/insights.dart';
 export 'src/replay.dart';

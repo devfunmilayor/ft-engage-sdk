@@ -2,6 +2,7 @@
 
 ## 0.13.0
 
+- In-app messages: `EngageInApp` draws cards and banners from the console when their trigger event happens, and reports `inapp.shown`, `inapp.clicked` and `inapp.dismissed`. `FtEngage.init` takes `inAppMessages` (on by default).
 - Sessions: `session.started` and `session.ended` are sent automatically. `FtEngage.init` takes `sessionTimeout` (30 minutes by default, `null` turns sessions off).
 - With `ReplayConfig(captureFieldText: true)` a replay snapshot carries the text of text boxes that pass the safety rules, never password, PIN, code, card, account, balance or amount boxes.
 - Leaving a text box sends a `form.field` event with the box name, filled or empty, a length bucket and time spent, never the value (`InsightsConfig(forms: false)` turns it off).

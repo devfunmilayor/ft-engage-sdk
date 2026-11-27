@@ -64,6 +64,7 @@ Try it without a server: `dart run example/tool/mock_server.dart`, then run the 
 - [Behaviour insights](docs/insights.md)
 - [Session replay](docs/replay.md)
 - [Push notifications](docs/push.md)
+- [In-app messages](docs/in-app.md)
 - [API reference](docs/api.md)
 - [Event naming](docs/event-naming.md)
 - [Privacy and data collected](docs/privacy.md)
