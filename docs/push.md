@@ -56,6 +56,21 @@ class MySource implements PushSource, PushChanges, PushPermission {
 
 `PushChanges` and `PushPermission` are optional. With only `read`, the state is checked at start and on resume.
 
+## Report deliveries and opens
+
+Start a `PushTracker` after `FtEngage.init` so the console can show how many people received and opened each push campaign, the way it does for email:
+
+```dart
+final tracker = PushTracker(track: engage.track);
+await tracker.start();
+```
+
+- A notification that arrives while the app is open is sent as `push.received`.
+- A notification the person taps, including the one that launched the app, is sent as `push.opened`, once per notification.
+- Both carry `send`, the id FT.Engage put in the notification's data. FT.Engage counts them only for the device the notification was sent to.
+- Notifications from other senders and the silent checks used to estimate uninstalls are ignored.
+- Arrivals while the app is in the background or closed are not reported, because Firebase handles those in a separate isolate. A later open still counts the notification as delivered.
+
 ## What this does not do
 
-It does not receive or display notifications, handle taps on them, or create Android notification channels. That is your app's job with Firebase. It also cannot be tested without a device and a Firebase project, so check a real send before you rely on it.
+It does not display notifications, route taps to a screen in your app, or create Android notification channels. That is your app's job with Firebase. It also cannot be tested without a device and a Firebase project, so check a real send before you rely on it.

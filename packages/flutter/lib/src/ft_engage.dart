@@ -18,6 +18,7 @@ class FtEngage with WidgetsBindingObserver {
     this.insights,
     this.replay, {
     String? timezone,
+    this.sessions,
   }) : _timezone = timezone;
 
   final EngageClient client;
@@ -31,6 +32,7 @@ class FtEngage with WidgetsBindingObserver {
   final String? _platform;
   final String? _appVersion;
   final String? _timezone;
+  final SessionTracker? sessions;
   PushState? _lastPush;
   StreamSubscription<void>? _pushChanges;
   bool _observing = false;
@@ -42,6 +44,7 @@ class FtEngage with WidgetsBindingObserver {
     String? appVersion,
     String? appId,
     String? timezone,
+    Duration? sessionTimeout = const Duration(minutes: 30),
     PushSource? pushSource,
     Transport? transport,
     EngageStorage? storage,
@@ -93,6 +96,14 @@ class FtEngage with WidgetsBindingObserver {
             ),
       recorder,
       timezone: timezone,
+      sessions: sessionTimeout == null
+          ? null
+          : SessionTracker(
+              store: store,
+              clock: const SystemClock(),
+              timeout: sessionTimeout,
+              track: client.track,
+            ),
     );
     await instance.insights?.recover();
     if (observeLifecycle) instance._startObserving();
@@ -104,6 +115,7 @@ class FtEngage with WidgetsBindingObserver {
     }
     await instance._syncRegistration();
     await client.track('app.opened');
+    await instance.sessions?.foreground();
     return instance;
   }
 
@@ -221,9 +233,11 @@ class FtEngage with WidgetsBindingObserver {
       case AppLifecycleState.resumed:
         replay?.mark('fg');
         client.track('app.foregrounded');
+        unawaited(sessions?.foreground() ?? Future<void>.value());
         _syncRegistration();
       case AppLifecycleState.paused:
         insights?.leaveScreen();
+        unawaited(sessions?.background() ?? Future<void>.value());
         replay?.mark('bg');
         unawaited(replay?.buffer.flush() ?? Future<void>.value());
         client.track('app.backgrounded').then((_) => client.flush(force: true));

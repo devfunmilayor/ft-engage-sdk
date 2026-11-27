@@ -41,6 +41,7 @@ Future<FtEngage> start(
   bool consent = false,
   bool observe = false,
   String? timezone,
+  Duration? sessionTimeout = const Duration(minutes: 30),
 }) => FtEngage.init(
   publicKey: key,
   endpoint: Uri.parse('https://api.example.com'),
@@ -53,10 +54,19 @@ Future<FtEngage> start(
   platformOverride: 'android',
   appVersion: '1.2.3',
   timezone: timezone,
+  sessionTimeout: sessionTimeout,
 );
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  test('sessions can be turned off', () async {
+    final transport = RecordingTransport();
+    final engage = await start(transport, sessionTimeout: null);
+    await engage.flush();
+    expect(transport.events().map((e) => e['name']), ['app.opened']);
+    expect(engage.sessions, isNull);
+  });
 
   test('registration sends an IANA time zone the server can use', () async {
     final transport = RecordingTransport();
@@ -98,9 +108,16 @@ void main() {
       expect(register['platform'], 'android');
       expect(register['pushToken'], 'fcm_token_0000000000000000');
       expect(register['appVersion'], '1.2.3');
-      expect(engage.client.pendingCount, 1);
+      expect(engage.client.pendingCount, 2);
       await engage.flush();
-      expect(transport.events().single['name'], 'app.opened');
+      expect(transport.events().map((e) => e['name']), [
+        'app.opened',
+        'session.started',
+      ]);
+      expect(transport.events().last['props'], {
+        'session_number': 1,
+        'first': true,
+      });
       engage.dispose();
     },
   );
