@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.12.0
+
+- `FtEngage.identify` takes `userHashExpiresAt` (requires `ft_engage_core` 0.12.0).
+
 ## 0.11.0
 
 - `FtEngage.reportAttribution` and `FtEngage.trackLinkOpened` (require `ft_engage_core` 0.11.0).

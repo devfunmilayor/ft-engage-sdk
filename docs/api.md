@@ -47,7 +47,29 @@ import { createHmac } from 'node:crypto';
 const userHash = createHmac('sha256', process.env.ENGAGE_IDENTITY_SECRET).update(userId).digest('hex');
 ```
 
-The hash covers the user id only, so keep it as private as a session token, send it over TLS only, and generate it only after your own sign-in succeeded. Rotating the secret in the console invalidates every hash at once.
+This plain hash covers the user id only and never stops working until you rotate the secret, so keep it as private as a session token, send it over TLS only, and generate it only after your own sign-in succeeded. Rotating the secret in the console invalidates every hash at once.
+
+### Hashes that expire
+
+A hash can carry a deadline, so a copy that leaks stops working on its own. Your server picks the deadline, signs it into the hash, and returns both to the app:
+
+```js
+import { createHmac } from 'node:crypto';
+const expiresAt = Math.floor(Date.now() / 1000) + 24 * 3600; // seconds since 1970
+const userHash = createHmac('sha256', process.env.ENGAGE_IDENTITY_SECRET)
+  .update(`${userId}\n${expiresAt}`) // user id, a newline, then the deadline
+  .digest('hex');
+```
+
+```dart
+await engage.identify(
+  userId,
+  userHash: hashFromServer,
+  userHashExpiresAt: DateTime.fromMillisecondsSinceEpoch(expiresAtSeconds * 1000, isUtc: true),
+);
+```
+
+FT.Engage checks the signature over the user id and the deadline together, then refuses an expired hash (`401 identity_expired`) and a deadline more than 30 days away. The SDK drops a rejected identify, so an expired hash is not retried. Pick a deadline longer than the longest time the app may be offline before it can send, and call `identify` again with a fresh hash whenever your own session is refreshed. A project can be set to refuse hashes without a deadline once all your apps send one (the console shows this under identity security). `userHashExpiresAt` needs `ft_engage_core` 0.12.0 or later, and a server that understands it; older apps keep working with the plain hash until you turn that switch on.
 
 Calls made with a secret key from your server need no hash.
 

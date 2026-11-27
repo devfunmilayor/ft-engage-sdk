@@ -82,6 +82,16 @@
     "userHash": {
       "type": "string",
       "pattern": "^[a-f0-9]{64}$"
+    },
+    "userHashExpiresAt": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4102444800
     }
+  },
+  "dependentRequired": {
+    "userHashExpiresAt": [
+      "userHash"
+    ]
   }
 }

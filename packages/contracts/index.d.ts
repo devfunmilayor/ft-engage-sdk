@@ -46,6 +46,7 @@ export interface IdentifyPayload {
   installId: string;
   userId: string;
   userHash?: string;
+  userHashExpiresAt?: number;
   email?: string;
   phone?: string;
   traits?: Record<string, TraitValue>;

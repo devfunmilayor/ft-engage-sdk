@@ -12,14 +12,28 @@ final _sensitive = RegExp(
 );
 
 const maxTraits = 30;
+const _farFuture = 4102444800;
 
 void validateIdentity({
   required String userId,
   String? userHash,
+  DateTime? userHashExpiresAt,
   String? email,
   String? phone,
   Map<String, Object?> traits = const {},
 }) {
+  if (userHashExpiresAt != null && userHash == null) {
+    throw const InvalidIdentityException(
+      'userHashExpiresAt only makes sense together with a userHash.',
+    );
+  }
+  if (userHashExpiresAt != null &&
+      (userHashExpiresAt.millisecondsSinceEpoch ~/ 1000 < 1 ||
+          userHashExpiresAt.millisecondsSinceEpoch ~/ 1000 > _farFuture)) {
+    throw const InvalidIdentityException(
+      'userHashExpiresAt must be a real date, the one your server signed.',
+    );
+  }
   if (userHash != null && !_hash.hasMatch(userHash)) {
     throw const InvalidIdentityException(
       'userHash must be 64 lowercase hex characters made by your server.',
@@ -78,6 +92,7 @@ Map<String, Object?> buildIdentify({
   required String installId,
   required String userId,
   String? userHash,
+  DateTime? userHashExpiresAt,
   String? email,
   String? phone,
   Map<String, Object?> traits = const {},
@@ -100,10 +115,17 @@ Map<String, Object?> buildIdentify({
   final oldEmail = same ? pending['email'] : null;
   final oldPhone = same ? pending['phone'] : null;
   final oldHash = same ? pending['userHash'] : null;
+  final oldExpiry = same ? pending['userHashExpiresAt'] : null;
+  final expiry = userHash != null
+      ? userHashExpiresAt == null
+            ? null
+            : userHashExpiresAt.millisecondsSinceEpoch ~/ 1000
+      : oldExpiry;
   return {
     'installId': installId,
     'userId': userId,
     'userHash': ?(userHash ?? oldHash),
+    'userHashExpiresAt': ?expiry,
     'email': ?(email ?? oldEmail),
     'phone': ?(phone ?? oldPhone),
     if (mergedTraits.isNotEmpty) 'traits': mergedTraits,

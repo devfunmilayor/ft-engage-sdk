@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.0
+
+- `identify` accepts `userHashExpiresAt` (whole seconds since 1970, 1 to 4102444800), allowed only together with `userHash`.
+
 ## 0.6.0
 
 - Added the `attribution_install` schema: the body of `POST /v1/attribution/install` (an install id plus a referrer or an Apple token).
