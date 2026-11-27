@@ -5,6 +5,7 @@
 - With `ReplayConfig(captureFieldText: true)` a replay snapshot carries the text of text boxes that pass the safety rules, never password, PIN, code, card, account, balance or amount boxes.
 - Leaving a text box sends a `form.field` event with the box name, filled or empty, a length bucket and time spent, never the value (`InsightsConfig(forms: false)` turns it off).
 - Taps carry a `label` and `role` read from the control's accessibility label, tooltip or button text, never from list rows, text boxes or `EngageSensitive` areas, and dropped when it looks like money, contact details or a name.
+- `FtEngage.init` takes `timezone`, an IANA name such as `Africa/Lagos`. The device registration now sends an IANA time zone instead of an abbreviation such as `WAT`, which the server could not use to time messages to the local hour.
 - Requires `ft_engage_core` 0.13.0.
 
 ## 0.12.0

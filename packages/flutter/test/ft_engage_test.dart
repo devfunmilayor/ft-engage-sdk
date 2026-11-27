@@ -40,6 +40,7 @@ Future<FtEngage> start(
   PushSource? push,
   bool consent = false,
   bool observe = false,
+  String? timezone,
 }) => FtEngage.init(
   publicKey: key,
   endpoint: Uri.parse('https://api.example.com'),
@@ -51,10 +52,32 @@ Future<FtEngage> start(
   flushInterval: null,
   platformOverride: 'android',
   appVersion: '1.2.3',
+  timezone: timezone,
 );
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  test('registration sends an IANA time zone the server can use', () async {
+    final transport = RecordingTransport();
+    await start(transport, timezone: 'Africa/Lagos');
+    final register = transport.calls
+        .firstWhere((c) => c.$1.path == '/v1/register')
+        .$2;
+    expect(register['timezone'], 'Africa/Lagos');
+
+    final plain = RecordingTransport();
+    await start(plain);
+    final sent = plain.calls
+        .firstWhere((c) => c.$1.path == '/v1/register')
+        .$2['timezone'];
+    final now = DateTime.now();
+    expect(
+      sent,
+      resolveTimezone(deviceName: now.timeZoneName, offset: now.timeZoneOffset),
+    );
+    expect(sent == null || sent == 'UTC' || '$sent'.contains('/'), isTrue);
+  });
 
   test(
     'init registers the device with push state and queues app.opened',
