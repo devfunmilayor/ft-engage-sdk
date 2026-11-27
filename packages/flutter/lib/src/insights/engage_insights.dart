@@ -6,6 +6,7 @@ import 'package:ft_engage_core/ft_engage_core.dart';
 
 import '../ft_engage.dart';
 import 'engage_marker.dart';
+import 'form_watcher.dart';
 import 'response_watch.dart';
 
 const _tapSlop = 18.0;
@@ -106,10 +107,24 @@ class _EngageInsightsState extends State<EngageInsights> {
   bool _multi = false;
   int _scrollEpoch = 0;
 
+  FormWatcher? _forms;
+
   @override
   void initState() {
     super.initState();
-    if (widget.engage.insights != null) _watch.install();
+    final recorder = widget.engage.insights;
+    if (recorder != null) {
+      _watch.install();
+      if (recorder.config.forms) {
+        _forms = FormWatcher(
+          track: (name, {props = const {}}) => widget.engage.client.track(
+            name,
+            props: props,
+            screen: recorder.screen,
+          ),
+        )..start();
+      }
+    }
   }
 
   @override
@@ -117,6 +132,7 @@ class _EngageInsightsState extends State<EngageInsights> {
     for (final timer in _pending) {
       timer.cancel();
     }
+    _forms?.stop();
     _watch.uninstall();
     super.dispose();
   }

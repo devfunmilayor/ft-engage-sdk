@@ -22,6 +22,10 @@ Every request carries the public key in an `Authorization` header and a JSON bod
 
 The server necessarily sees the network address of each request. The SDK does not put it in the payload.
 
+## Text boxes
+
+By default nothing typed is read. Two optional things exist, both for text boxes: `form.field` events (box name, filled or empty, a length bucket and time spent, never the value) when insights are on, and, only if you set `ReplayConfig(captureFieldText: true)`, the text of boxes that pass a strict check. Password, PIN, security code, card, account, balance and amount boxes are never read. See the replay guide for the exact rules.
+
 ## Consent
 
 With `requireConsent: true` nothing is collected until `setConsent(ConsentState.granted)`. Denying consent clears the queue.

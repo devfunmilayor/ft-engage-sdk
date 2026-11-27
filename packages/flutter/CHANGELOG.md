@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.13.0
+
+- With `ReplayConfig(captureFieldText: true)` a replay snapshot carries the text of text boxes that pass the safety rules, never password, PIN, code, card, account, balance or amount boxes.
+- Leaving a text box sends a `form.field` event with the box name, filled or empty, a length bucket and time spent, never the value (`InsightsConfig(forms: false)` turns it off).
+- Requires `ft_engage_core` 0.13.0.
+
 ## 0.12.0
 
 - `FtEngage.identify` takes `userHashExpiresAt` (requires `ft_engage_core` 0.12.0).

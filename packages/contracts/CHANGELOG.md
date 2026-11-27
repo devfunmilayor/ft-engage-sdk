@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.8.0
+
+- A replay `f` node can carry the text of the box as a sixth item (1 to 80 characters), only for field nodes.
+- Event property names that look like secrets are refused by the `event` schema.
+
 ## 0.7.0
 
 - `identify` accepts `userHashExpiresAt` (whole seconds since 1970, 1 to 4102444800), allowed only together with `userHash`.

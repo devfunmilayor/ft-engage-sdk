@@ -18,6 +18,7 @@ class InsightsConfig {
     this.sessionGap = const Duration(minutes: 30),
     this.normalizeScreens = true,
     this.screenName,
+    this.forms = true,
   }) : assert(sampleRate >= 0 && sampleRate <= 1, 'sampleRate is 0 to 1'),
        assert(rageTaps >= 2, 'a rage burst is at least 2 taps');
 
@@ -32,6 +33,7 @@ class InsightsConfig {
   final Duration sessionGap;
   final bool normalizeScreens;
   final String Function(String)? screenName;
+  final bool forms;
 }
 
 class TapRecord {

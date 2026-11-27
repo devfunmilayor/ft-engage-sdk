@@ -12,7 +12,12 @@ class ReplayRecorder extends InsightsListener {
     LayoutCapture? capture,
     this.settle = const Duration(milliseconds: 350),
     this.afterTap = const Duration(milliseconds: 600),
-  }) : _capture = capture ?? ((maxNodes) => captureLayout(maxNodes: maxNodes));
+  }) : _capture =
+           capture ??
+           ((maxNodes) => captureLayout(
+             maxNodes: maxNodes,
+             captureText: buffer.config.captureFieldText,
+           ));
 
   final ReplayBuffer buffer;
   final LayoutCapture _capture;

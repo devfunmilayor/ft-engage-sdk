@@ -1,4 +1,7 @@
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:ft_engage_core/ft_engage_core.dart';
 
 import 'engage_marker.dart';
 
@@ -31,16 +34,69 @@ Color? _coloredBoxColor(RenderObject object) {
   }
 }
 
-List<Object>? _node(String kind, Rect rect, [Color? color]) {
+const _keyboards = {
+  2: 'number',
+  3: 'phone',
+  4: 'datetime',
+  5: 'emailAddress',
+  7: 'visiblePassword',
+  10: 'none',
+};
+
+String fieldLabel(Element element) {
+  final parts = <String>[];
+  final field = element.findAncestorWidgetOfExactType<TextField>();
+  final decoration = field?.decoration;
+  if (decoration != null) {
+    parts
+      ..add(decoration.labelText ?? '')
+      ..add(decoration.hintText ?? '')
+      ..add(decoration.helperText ?? '');
+  }
+  final cupertino = element.findAncestorWidgetOfExactType<CupertinoTextField>();
+  parts.add(cupertino?.placeholder ?? '');
+  return parts.where((p) => p.isNotEmpty).join(' ');
+}
+
+FieldFacts factsOf(Element element, EditableText widget) => FieldFacts(
+  text: widget.controller.text,
+  label: fieldLabel(element),
+  obscure: widget.obscureText,
+  keyboard: _keyboards[widget.keyboardType.index],
+  hints: [...?widget.autofillHints],
+  autocorrect: widget.autocorrect,
+  suggestions: widget.enableSuggestions,
+);
+
+Map<RenderEditable, String> readableFields() {
+  final out = <RenderEditable, String>{};
+  void visit(Element element) {
+    final widget = element.widget;
+    if (widget is EditableText && element is StatefulElement) {
+      final state = element.state;
+      if (state is EditableTextState) {
+        final text = FieldPolicy.readable(factsOf(element, widget));
+        if (text != null) out[state.renderEditable] = text;
+      }
+    }
+    element.visitChildren(visit);
+  }
+
+  WidgetsBinding.instance.rootElement?.visitChildren(visit);
+  return out;
+}
+
+List<Object>? _node(String kind, Rect rect, [Color? color, String? text]) {
   final left = _clamp(rect.left);
   final top = _clamp(rect.top);
   final width = _clamp(rect.width).clamp(0, 100000);
   final height = _clamp(rect.height).clamp(0, 100000);
   if (width < 1 || height < 1) return null;
+  if (text != null) return [kind, left, top, width, height, text];
   return [kind, left, top, width, height, if (color != null) _argb(color)];
 }
 
-LayoutSnapshot? captureLayout({int maxNodes = 250}) {
+LayoutSnapshot? captureLayout({int maxNodes = 250, bool captureText = false}) {
   final views = RendererBinding.instance.renderViews;
   if (views.isEmpty) return null;
   final view = views.first;
@@ -48,6 +104,9 @@ LayoutSnapshot? captureLayout({int maxNodes = 250}) {
   if (size.isEmpty) return null;
   final screen = Offset.zero & size;
   final nodes = <List<Object>>[];
+  final fields = captureText
+      ? readableFields()
+      : const <RenderEditable, String>{};
 
   void add(List<Object>? node) {
     if (node == null || nodes.length >= maxNodes) return;
@@ -87,7 +146,7 @@ LayoutSnapshot? captureLayout({int maxNodes = 250}) {
       if (object is RenderParagraph) {
         if (object.text.toPlainText().isNotEmpty) add(_node('t', rect));
       } else if (object is RenderEditable) {
-        add(_node('f', rect));
+        add(_node('f', rect, null, fields[object]));
       } else if (object is RenderImage) {
         add(_node('i', rect));
       } else if (object is RenderPhysicalShape && object.color.a > 0) {

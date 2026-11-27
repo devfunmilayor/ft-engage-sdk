@@ -4,23 +4,55 @@
   "title": "Event",
   "type": "object",
   "additionalProperties": false,
-  "required": ["eventId", "name", "installId", "at"],
+  "required": [
+    "eventId",
+    "name",
+    "installId",
+    "at"
+  ],
   "properties": {
-    "eventId": { "type": "string", "pattern": "^[A-Za-z0-9_-]{8,64}$" },
-    "name": { "type": "string", "pattern": "^[a-z][a-z0-9_.]{0,63}$" },
-    "installId": { "type": "string", "pattern": "^[A-Za-z0-9_-]{8,64}$" },
-    "userId": { "type": "string", "minLength": 1, "maxLength": 128 },
-    "screen": { "type": "string", "minLength": 1, "maxLength": 128 },
-    "at": { "type": "string", "format": "date-time" },
+    "eventId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{8,64}$"
+    },
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_.]{0,63}$"
+    },
+    "installId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{8,64}$"
+    },
+    "userId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "screen": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "at": {
+      "type": "string",
+      "format": "date-time"
+    },
     "props": {
       "type": "object",
       "maxProperties": 40,
       "propertyNames": {
         "pattern": "^[a-z][a-z0-9_]{0,39}$",
-        "not": { "pattern": "(^|_)(amount|amounts|fee|fees|rate|rates|price|prices|balance|balances|revenue|volume|usd|total|cost|salary)($|_)" }
+        "not": {
+          "pattern": "(^|_)(amount|amounts|fee|fees|rate|rates|price|prices|balance|balances|revenue|volume|usd|total|cost|salary|pin|pins|password|passwords|passcode|passcodes|pwd|secret|secrets|token|tokens|otp|cvv|cvc|csc|card|cards|ssn|bvn|nin|iban|account|accounts|routing|security|credential|credentials|mnemonic|seed|passport)($|_)"
+        }
       },
       "additionalProperties": {
-        "type": ["string", "number", "boolean", "null"],
+        "type": [
+          "string",
+          "number",
+          "boolean",
+          "null"
+        ],
         "maxLength": 256
       }
     }
