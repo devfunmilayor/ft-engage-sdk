@@ -16,8 +16,9 @@ class FtEngage with WidgetsBindingObserver {
     this._platform,
     this._appVersion,
     this.insights,
-    this.replay,
-  );
+    this.replay, {
+    String? timezone,
+  }) : _timezone = timezone;
 
   final EngageClient client;
   final InsightsRecorder? insights;
@@ -29,6 +30,7 @@ class FtEngage with WidgetsBindingObserver {
   final PushSource? _pushSource;
   final String? _platform;
   final String? _appVersion;
+  final String? _timezone;
   PushState? _lastPush;
   StreamSubscription<void>? _pushChanges;
   bool _observing = false;
@@ -39,6 +41,7 @@ class FtEngage with WidgetsBindingObserver {
     bool requireConsent = false,
     String? appVersion,
     String? appId,
+    String? timezone,
     PushSource? pushSource,
     Transport? transport,
     EngageStorage? storage,
@@ -89,6 +92,7 @@ class FtEngage with WidgetsBindingObserver {
               listener: recorder,
             ),
       recorder,
+      timezone: timezone,
     );
     await instance.insights?.recover();
     if (observeLifecycle) instance._startObserving();
@@ -184,6 +188,15 @@ class FtEngage with WidgetsBindingObserver {
     client.close();
   }
 
+  String? _deviceTimezone() {
+    final now = DateTime.now();
+    return resolveTimezone(
+      configured: _timezone,
+      deviceName: now.timeZoneName,
+      offset: now.timeZoneOffset,
+    );
+  }
+
   Future<void> _syncRegistration({bool force = false}) async {
     final platform = _platform;
     if (platform == null) return;
@@ -194,7 +207,7 @@ class FtEngage with WidgetsBindingObserver {
       RegisterInfo(
         platform: platform,
         appVersion: _appVersion,
-        timezone: DateTime.now().timeZoneName,
+        timezone: _deviceTimezone(),
         locale: PlatformDispatcher.instance.locale.toLanguageTag(),
         pushStatus: push.status,
         pushToken: push.token,
