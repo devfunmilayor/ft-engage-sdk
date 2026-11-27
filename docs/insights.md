@@ -25,7 +25,7 @@ Name your routes. A screen is recorded under its route name, and a route with no
 | Event | When | Properties |
 |---|---|---|
 | `screen.viewed` | a screen appears | `sid` (session), `from` (previous screen) |
-| `ui.tap` | a quick tap that is not a drag | `x`, `y` (0 to 1 of the screen), `vw`, `vh` (screen size), `sid`, `so` and `ch` (scroll offset and page height in pixels, only on a screen that scrolls), `dead` (only when true), `target` (only if you named it) |
+| `ui.tap` | a quick tap that is not a drag | `x`, `y` (0 to 1 of the screen), `vw`, `vh` (screen size), `sid`, `so` and `ch` (scroll offset and page height in pixels, only on a screen that scrolls), `dead` (only when true), `target` (only if you named it), `label` and `role` (what was pressed, for example `Wallet` and `button`, only when it is safe to say) |
 | `ui.rage_tap` | 3 taps within a second near the same place, once per burst | the same, plus `taps` |
 | `ui.scroll_depth` | the person leaves a screen, the app goes to the background, or the app starts again after being killed | `sid`, `depth` (0 to 100, the deepest point reached), `recovered` (only when sent after a kill) |
 

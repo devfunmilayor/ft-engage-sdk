@@ -16,10 +16,12 @@ class ReplayConfig {
     this.maxBufferedChunks = 20,
     this.maxSessionEvents = 5000,
     this.scrollInterval = const Duration(milliseconds: 200),
+    this.captureFieldText = false,
   }) : assert(sampleRate >= 0 && sampleRate <= 1, 'sampleRate is 0 to 1'),
        assert(maxNodes > 0 && maxNodes <= 250, 'maxNodes is 1 to 250'),
        assert(chunkEvents > 0 && chunkEvents <= 500, 'chunkEvents is 1 to 500');
 
+  final bool captureFieldText;
   final double sampleRate;
   final int maxNodes;
   final Duration snapshotInterval;

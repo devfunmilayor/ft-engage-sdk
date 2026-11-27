@@ -6,7 +6,9 @@ import 'package:ft_engage_core/ft_engage_core.dart';
 
 import '../ft_engage.dart';
 import 'engage_marker.dart';
+import 'form_watcher.dart';
 import 'response_watch.dart';
+import 'tap_label.dart';
 
 const _tapSlop = 18.0;
 const _tapTime = Duration(milliseconds: 500);
@@ -42,12 +44,16 @@ class TapReading {
     this.target,
     this.sensitive = false,
     this.editable = false,
+    this.label,
+    this.role,
   });
 
   final bool editable;
   final bool dead;
   final String? target;
   final bool sensitive;
+  final String? label;
+  final String? role;
 }
 
 bool _handlesTouch(RenderObject target) =>
@@ -67,8 +73,24 @@ TapReading readTap(HitTestResult result) {
   var dead = true;
   var editable = false;
   String? target;
+  String? label;
+  var explicit = false;
+  String? role;
+  var inList = false;
   for (final entry in result.path) {
     final object = entry.target;
+    if (object is RenderSliver) inList = true;
+    if (object is RenderSemanticsAnnotations && role != 'button') {
+      final read = readLabel(object);
+      if (read.label != null &&
+          (label == null || (read.explicit && !explicit))) {
+        label = read.label;
+        explicit = read.explicit;
+      }
+      if (read.role != null && (role == null || read.role == 'button')) {
+        role = read.role;
+      }
+    }
     if (object is RenderEngageMarker) {
       if (object.kind == MarkerKind.sensitive) {
         return const TapReading(sensitive: true);
@@ -80,7 +102,13 @@ TapReading readTap(HitTestResult result) {
       if (object is RenderEditable) editable = true;
     }
   }
-  return TapReading(dead: dead, target: target, editable: editable);
+  return TapReading(
+    dead: dead,
+    target: target,
+    editable: editable,
+    label: inList && !explicit ? null : label,
+    role: role ?? (dead ? null : 'tap'),
+  );
 }
 
 class EngageInsights extends StatefulWidget {
@@ -106,10 +134,24 @@ class _EngageInsightsState extends State<EngageInsights> {
   bool _multi = false;
   int _scrollEpoch = 0;
 
+  FormWatcher? _forms;
+
   @override
   void initState() {
     super.initState();
-    if (widget.engage.insights != null) _watch.install();
+    final recorder = widget.engage.insights;
+    if (recorder != null) {
+      _watch.install();
+      if (recorder.config.forms) {
+        _forms = FormWatcher(
+          track: (name, {props = const {}}) => widget.engage.client.track(
+            name,
+            props: props,
+            screen: recorder.screen,
+          ),
+        )..start();
+      }
+    }
   }
 
   @override
@@ -117,6 +159,7 @@ class _EngageInsightsState extends State<EngageInsights> {
     for (final timer in _pending) {
       timer.cancel();
     }
+    _forms?.stop();
     _watch.uninstall();
     super.dispose();
   }
@@ -172,6 +215,8 @@ class _EngageInsightsState extends State<EngageInsights> {
       viewportHeight: size.height,
       dead: dead,
       target: reading.target,
+      label: reading.label,
+      role: reading.role,
     );
     if (!reading.dead) {
       recorder.tap(sample(false));

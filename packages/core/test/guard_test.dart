@@ -2,6 +2,7 @@ import 'package:ft_engage_core/ft_engage_core.dart';
 import 'package:test/test.dart';
 
 void main() {
+  secrets();
   test('financial looking keys are rejected', () {
     for (final token in [
       'amount',
@@ -79,5 +80,60 @@ void main() {
       () => validateEventName('1st'),
       throwsA(isA<InvalidEventException>()),
     );
+  });
+}
+
+void secrets() {
+  test('secret looking keys and card numbers are rejected', () {
+    for (final token in [
+      'pin',
+      'password',
+      'passcode',
+      'secret',
+      'token',
+      'otp',
+      'cvv',
+      'cvc',
+      'card',
+      'ssn',
+      'bvn',
+      'nin',
+      'iban',
+      'account',
+      'routing',
+      'security',
+      'credential',
+      'mnemonic',
+      'seed',
+      'passport',
+    ]) {
+      for (final key in [token, 'user_$token', '${token}_value']) {
+        expect(
+          () => validateProps({key: 'x'}),
+          throwsA(isA<InvalidEventException>()),
+          reason: key,
+        );
+      }
+    }
+    expect(
+      () => validateProps({'note': '4111 1111 1111 1111'}),
+      throwsA(isA<InvalidEventException>()),
+    );
+    expect(
+      () => validateProps({'note': '4111-1111-1111-1111'}),
+      throwsA(isA<InvalidEventException>()),
+    );
+  });
+
+  test('ordinary keys and values still pass', () {
+    validateProps({
+      'pinned': true,
+      'planet': 'earth',
+      'tokenize': 1,
+      'order_number': '1234567890123',
+      'note': '4111 1111 1111 1112',
+      'phone_model': 'iPhone',
+      'screen': 'home',
+    });
   });
 }

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'clock.dart';
+import 'field_policy.dart';
 import 'storage.dart';
 
 class InsightsConfig {
@@ -18,6 +19,7 @@ class InsightsConfig {
     this.sessionGap = const Duration(minutes: 30),
     this.normalizeScreens = true,
     this.screenName,
+    this.forms = true,
   }) : assert(sampleRate >= 0 && sampleRate <= 1, 'sampleRate is 0 to 1'),
        assert(rageTaps >= 2, 'a rage burst is at least 2 taps');
 
@@ -32,6 +34,7 @@ class InsightsConfig {
   final Duration sessionGap;
   final bool normalizeScreens;
   final String Function(String)? screenName;
+  final bool forms;
 }
 
 class TapRecord {
@@ -68,6 +71,8 @@ class TapSample {
     required this.viewportHeight,
     this.dead = false,
     this.target,
+    this.label,
+    this.role,
   });
 
   final double x;
@@ -76,6 +81,8 @@ class TapSample {
   final double viewportHeight;
   final bool dead;
   final String? target;
+  final String? label;
+  final String? role;
 }
 
 typedef InsightTrack =
@@ -247,6 +254,8 @@ class InsightsRecorder {
       if (_contentHeight != null) 'ch': _contentHeight!.round(),
       if (sample.dead) 'dead': true,
       'target': ?sample.target,
+      'label': ?FieldPolicy.label(sample.label),
+      'role': ?sample.role,
     };
     _emit('ui.tap', props);
     if (burst != null) {
@@ -260,6 +269,8 @@ class InsightsRecorder {
         'ch': ?props['ch'],
         'taps': burst,
         'target': ?props['target'],
+        'label': ?props['label'],
+        'role': ?props['role'],
       });
     }
   }

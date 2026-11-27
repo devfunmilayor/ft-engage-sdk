@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.13.0
+
+- Event property names that look like secrets (pin, password, passcode, secret, token, otp, cvv, cvc, card, ssn, bvn, nin, iban, account, routing, security, credential, mnemonic, seed, passport) are refused, and so is a value that is a card number. Previously only money-like names were refused.
+- `FieldPolicy` and `FieldFacts`: the rules for deciding whether a text box may be read.
+- `ReplayConfig.captureFieldText` (off by default) and `InsightsConfig.forms` (on by default).
+
 ## 0.12.0
 
 - `identify` takes `userHashExpiresAt`, the deadline your server signed into the identity hash. It is sent as `userHashExpiresAt` (whole seconds since 1970) together with `userHash`, and the pair is kept together when an identify is merged with an earlier one that has not been sent yet. Giving a deadline without a hash, or a date before 1970 or after 2100, throws `InvalidIdentityException`. Nothing changes for apps that do not use it.

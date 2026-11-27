@@ -6,6 +6,7 @@ export 'src/clock.dart';
 export 'src/config.dart';
 export 'src/consent.dart';
 export 'src/exceptions.dart';
+export 'src/field_policy.dart';
 export 'src/http_transport.dart';
 export 'src/identity.dart';
 export 'src/identity_payload.dart' show MarketingChannel;
